@@ -90,7 +90,7 @@ export const getSurveyResults = async (req, res) => {
     const surveyId = Number(req.params.surveyId);
     const hostId = req.decoded?.id || req.decoded?.uuid;
 
-    // 1. Verify ownership: Ensure the host running analytics actually owns this survey
+    // 1. Verify ownership: Ensure the host running results view actually owns this survey
     const survey = await prisma.survey.findUnique({
       where: { id: surveyId },
     });
@@ -100,7 +100,7 @@ export const getSurveyResults = async (req, res) => {
     if (survey.created_by !== hostId) {
       return res
         .status(403)
-        .json({ status: "error", msg: "Unauthorised access to analytics" });
+        .json({ status: "error", msg: "Unauthorised access to results" });
     }
 
     // 2. Fetch all questions belonging to this survey (to map out option defaults)
@@ -116,12 +116,12 @@ export const getSurveyResults = async (req, res) => {
 
     const totalSubmissions = responses.length;
 
-    // 4. Initialize our Analytics Structure package
-    const analyticsSummary = {};
+    // 4. Initialize results summary structure
+    const resultsSummary = {};
 
     questions.forEach((q) => {
       if (q.type === "TEXT") {
-        analyticsSummary[q.id] = {
+        resultsSummary[q.id] = {
           question_text: q.question_text,
           type: q.type,
           text_responses: [], // Text inputs will hold an array of strings literately
@@ -135,7 +135,7 @@ export const getSurveyResults = async (req, res) => {
           });
         }
 
-        analyticsSummary[q.id] = {
+        resultsSummary[q.id] = {
           question_text: q.question_text,
           type: q.type,
           counts: optionCounts,
@@ -154,9 +154,9 @@ export const getSurveyResults = async (req, res) => {
         const { question_id, answer } = item;
 
         // Skip if the question no longer exists in the summary tracking object
-        if (!analyticsSummary[question_id]) return;
+        if (!resultsSummary[question_id]) return;
 
-        const targetQuestion = analyticsSummary[question_id];
+        const targetQuestion = resultsSummary[question_id];
 
         if (targetQuestion.type === "TEXT") {
           // Push plain strings directly if answer exists and isn't empty
@@ -189,12 +189,12 @@ export const getSurveyResults = async (req, res) => {
       status: "ok",
       survey_title: survey.title,
       total_submissions: totalSubmissions,
-      analytics: analyticsSummary,
+      results: resultsSummary,
     });
   } catch (error) {
-    console.error("❌ getSurveyAnalytics Error:", error.message);
+    console.error("❌ getSurveyResults Error:", error.message);
     return res
       .status(500)
-      .json({ status: "error", msg: "Fail to compile survey analytics" });
+      .json({ status: "error", msg: "Fail to compile survey results" });
   }
 };

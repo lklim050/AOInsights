@@ -1,0 +1,29 @@
+<div class="container">
+  <div *ngIf="isLoading" class="loading">Loading surveys...</div>
+
+  <div *ngIf="errorMessage" class="error">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="!isLoading && !errorMessage">
+    <h1>Surveys List</h1>
+    <p class="subtitle">Available Surveys below:</p>
+
+    <div class="survey-grid">
+      <div class="survey-card" *ngFor="let survey of surveys">
+        <div class="card-header">
+          <h2>{{ survey.title }}</h2>
+        </div>
+        <div class="card-body">
+          <span class="points-badge"> {{ survey.points_reward }} points </span>
+        </div>
+        <div class="card-footer">
+          <button class="btn-primary">Take Survey</button>
+        </div>
+      </div>
+    </div>
+    <p *ngIf="surveys.length === 0" class="empty">
+      No surveys available right now.
+    </p>
+  </div>
+</div>

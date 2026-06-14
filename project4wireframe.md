@@ -50,44 +50,57 @@
 
 ---
 
-## Database Architecture Mapping (PostgreSQL)
+## Database Architecture Mapping (Prisma + PostgreSQL)
 
-To help visualize how the backend will track data, the foundational tables connect relationally as shown below:
+The canonical database definition lives in [backend-p4/prisma/schema.prisma](backend-p4/prisma/schema.prisma). The mapping below reflects the actual Prisma models used by the backend:
 
 ```
-  ┌───────────────────────────┐             ┌───────────────────────────┐             ┌───────────────────────────┐
-  │           users           │             │          surveys          │             │         questions         │
-  ├───────────────────────────┤             ├───────────────────────────┤             ├───────────────────────────┤
-  │ id : SERIAL (PK)          │             │ id : SERIAL (PK)          │             │ id : SERIAL (PK)          │
-  │ email : VARCHAR(100)      │◄───────────┼│ title : VARCHAR(100)      │             │ survey_id : INT (FK) ─────┼┐
-  │ name : VARCHAR(100)       │ (created_by)│ points_reward : INT       │             │ type : VARCHAR(50)        ││
-  │ password : VARCHAR(100)   │             │ is_published : BOOLEAN    │             │ options : JSONB           ││
-  │ role : VARCHAR(20)        │             └─────────────┬─────────────┘             └───────────────────────────┘│
-  │ points_bal : INT          │                           │                                                        │
-  └─────────────┬─────────────┘                           ▼                                                        │
-                │                               ┌───────────────────────────┐                                      │
-                │                               │     survey_responses      │                                      │
-                └──────────────────────────────►├───────────────────────────┤                                      │
-                           (user_id)            │ id : SERIAL (PK)          │                                      │
-                                                │ user_id : INT (FK)        │                                      │
-                                                │ survey_id : INT (FK)      │◄─────────────────────────────────────┘
-                                                │ status : VARCHAR(50)      │
-                                                │ ai_fraud_notes : TEXT     │
-                                                └───────────────────────────┘
-                                         [CONSTRAINT: UNIQUE(user_id, survey_id)]
+  ┌────────────────────────────┐            ┌────────────────────────────┐            ┌────────────────────────────┐
+  │           users            │            │          surveys           │            │         questions          │
+  ├────────────────────────────┤            ├────────────────────────────┤            ├────────────────────────────┤
+  │ uuid : STRING (PK)         │◄───────────┼│ created_by : STRING (FK)   │            │ survey_id : INT (FK) ─────┼┐
+  │ email : STRING (UNIQUE)    │ creator    ││ id : INT (PK)             │            │ question_text : TEXT       ││
+  │ name : STRING              │            ││ title : STRING             │            │ type : QuestionType        ││
+  │ password : STRING          │            ││ points_reward : INT        │            │ options : JSON?            ││
+  │ role : Role                │            ││ is_published : BOOLEAN     │            └────────────────────────────┘│
+  │ points_bal : INT           │            │└─────────────┬──────────────┘                                        │
+  └─────────────┬──────────────┘            │              │                                                       │
+                │                            │              ▼                                                       │
+                │                            │     ┌────────────────────────────┐                                   │
+                │                            └────►│     survey_responses        │                                   │
+                │                                  ├────────────────────────────┤                                   │
+                └─────────────────────────────────►│ id : INT (PK)              │                                   │
+                           (user_id)               │ user_id : STRING (FK)      │                                   │
+                                                   │ survey_id : INT (FK)       │◄──────────────────────────────────┘
+                                                   │ answers_payload : JSON     │
+                                                   │ status : STRING            │
+                                                   │ ai_fraud_notes : TEXT?     │
+                                                   └────────────────────────────┘
+                                            [CONSTRAINT: UNIQUE(user_id, survey_id)]
 ```
 
 ---
 
-## This is the SQL setup script to create the PostgreSQL tables:
+## Prisma Model Summary
+
+- `User` maps to `users`
+- `Survey` maps to `surveys`
+- `Question` maps to `questions`
+- `SurveyResponse` maps to `survey_responses`
+- `Role` is an enum: `HOST`, `USER`, `ADMIN`
+- `QuestionType` is an enum: `RADIO`, `CHECKBOX`, `SELECT`, `TEXT`
+
+The Prisma schema is the source of truth for column types, defaults, foreign keys, cascade behavior, and the unique compound key on survey responses.
+
+## Equivalent PostgreSQL Shape
 
 ```sql
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    uuid UUID PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'user',
+    role VARCHAR(50) NOT NULL DEFAULT 'USER',
     points_bal INT NOT NULL DEFAULT 0
 );
 
@@ -96,8 +109,8 @@ CREATE TABLE surveys (
     title VARCHAR(255) NOT NULL,
     points_reward INT NOT NULL DEFAULT 0,
     is_published BOOLEAN NOT NULL DEFAULT FALSE,
-    created_by INT NOT NULL,
-    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+    created_by UUID NOT NULL,
+    FOREIGN KEY (created_by) REFERENCES users(uuid) ON DELETE CASCADE
 );
 
 CREATE TABLE questions (
@@ -111,12 +124,12 @@ CREATE TABLE questions (
 
 CREATE TABLE survey_responses (
     id SERIAL PRIMARY KEY,
-    user_id INT NOT NULL,
+    user_id UUID NOT NULL,
     survey_id INT NOT NULL,
     answers_payload JSONB NOT NULL,
     status VARCHAR(50) NOT NULL DEFAULT 'pending',
     ai_fraud_notes TEXT DEFAULT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(uuid) ON DELETE CASCADE,
     FOREIGN KEY (survey_id) REFERENCES surveys(id) ON DELETE CASCADE,
     CONSTRAINT unique_user_survey UNIQUE (user_id, survey_id)
 );

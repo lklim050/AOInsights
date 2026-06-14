@@ -5,6 +5,7 @@ import {
   getSurveyById,
   readAllSurveys,
   readPublishedSurveys,
+  readTestSurveys,
   updateSurvey,
 } from "../controllers/surveys.js";
 import { auth, authHost } from "../middlewares/users.js";
@@ -12,6 +13,7 @@ import { getSurveyResults } from "../controllers/responses.js";
 
 const router = express.Router();
 
+router.get("/test", readTestSurveys);
 router.get("/", auth, readAllSurveys);
 router.get("/public", auth, readPublishedSurveys);
 router.put("/", authHost, createSurvey);

@@ -1,15 +1,15 @@
 // import prisma from "../db/prisma.js";
 
-// export const readSurveys = async (req, res) => {
-//   try {
-//     const surveys = await prisma.survey.findMany();
-//     return res.status(200).json(surveys);
-//   } catch (error) {
-//     return res
-//       .status(500)
-//       .json({ error: "Failed to retrieve surveys", details: error.message });
-//   }
-// };
+export const readTestSurveys = async (req, res) => {
+  try {
+    const surveys = await prisma.survey.findMany();
+    return res.status(200).json(surveys);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ error: "Failed to retrieve surveys", details: error.message });
+  }
+};
 
 import prisma from "../db/prisma.js";
 
