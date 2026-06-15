@@ -1,0 +1,101 @@
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>🏆 AskYouSomethingHa</h1>
+      <p>Create your account</p>
+    </div>
+
+    <!-- Success Message -->
+    <div class="api-success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      <!-- Name Field -->
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          placeholder="Your name"
+          [class.invalid]="name?.invalid && name?.touched"
+        />
+        <span class="error-text" *ngIf="name?.invalid && name?.touched">
+          Name must be at least 2 characters
+        </span>
+      </div>
+
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          [class.invalid]="email?.invalid && email?.touched"
+        />
+        <span class="error-text" *ngIf="email?.invalid && email?.touched">
+          Please enter a valid email
+        </span>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="Min. 6 characters"
+          [class.invalid]="password?.invalid && password?.touched"
+        />
+        <span class="error-text" *ngIf="password?.invalid && password?.touched">
+          Password must be at least 6 characters
+        </span>
+      </div>
+
+      <!-- Role Selection -->
+      <div class="form-group">
+        <label>I want to join as</label>
+        <div class="role-toggle">
+          <button
+            type="button"
+            [class.active]="role?.value === 'USER'"
+            (click)="role?.setValue('USER')"
+          >
+            👤 Survey Taker
+          </button>
+          <button
+            type="button"
+            [class.active]="role?.value === 'HOST'"
+            (click)="role?.setValue('HOST')"
+          >
+            📋 Survey Host
+          </button>
+        </div>
+        <!-- ↑ type="button" is critical here — without it,
+                clicking triggers form submit accidentally -->
+      </div>
+
+      <!-- API Error -->
+      <div class="api-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="registerForm.invalid || isLoading"
+      >
+        {{ isLoading ? "Creating account..." : "Create Account" }}
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Already have an account?
+      <a routerLink="/login">Sign in here</a>
+    </p>
+  </div>
+</div>

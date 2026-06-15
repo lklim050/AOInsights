@@ -11,6 +11,7 @@ export const getAllUsers = async (req, res) => {
         email: true, // Swapped from Mongoose 'username' to match your schema's 'email'
         name: true,
         role: true,
+        points_bal: true,
       },
     });
     return res.json(users);
@@ -89,6 +90,7 @@ export const loginUser = async (req, res) => {
       uuid: user.uuid,
       email: user.email,
       role: user.role,
+      points_bal: user.points_bal,
     });
   } catch (error) {
     console.error(error.message);

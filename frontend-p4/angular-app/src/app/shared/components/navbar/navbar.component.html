@@ -1,0 +1,43 @@
+<nav class="navbar">
+  <div class="nav-container">
+    <!-- Logo -->
+    <a routerLink="/" class="nav-logo"> 🏆 AskYouSomethingHa </a>
+
+    <!-- Right Side -->
+    <div class="nav-right" *ngIf="currentUser; else guestNav">
+      <!-- ↑ *ngIf with else — shows logged-in nav OR guest nav -->
+
+      <!-- Points Badge -->
+      <div class="nav-points">⭐ {{ currentUser.points_bal ?? 0 }} pts</div>
+
+      <!-- User Info -->
+      <div class="nav-user">
+        <span class="nav-role" [class.host]="currentUser.role === 'HOST'">
+          {{ currentUser.role }}
+        </span>
+        <span class="nav-email">{{ currentUser.email }}</span>
+      </div>
+
+      <!-- Host Dashboard Link -->
+
+      <a
+        *ngIf="currentUser.role === 'HOST' || currentUser.role === 'ADMIN'"
+        routerLink="/host"
+        class="nav-link"
+      >
+        Dashboard
+      </a>
+
+      <!-- Logout -->
+      <button class="btn-logout" (click)="logout()">Sign Out</button>
+    </div>
+
+    <!-- Guest Nav (not logged in) -->
+    <ng-template #guestNav>
+      <div class="nav-right">
+        <a routerLink="/login" class="nav-link">Sign In</a>
+        <a routerLink="/register" class="btn-register">Register</a>
+      </div>
+    </ng-template>
+  </div>
+</nav>

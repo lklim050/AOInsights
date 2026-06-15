@@ -1,0 +1,70 @@
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>🏆 AskYouSomethingHa</h1>
+      <p>Sign in to earn points</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <!-- ↑ [formGroup] binds this form tag to your loginForm object
+            (ngSubmit) calls onSubmit() when form is submitted -->
+
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          formControlName="email"
+          placeholder="you@example.com"
+          [class.invalid]="email?.invalid && email?.touched"
+        />
+        <!-- ↑ formControlName links this input to the 'email'
+                control in your FormGroup
+                [class.invalid] adds 'invalid' CSS class only
+                when field is invalid AND user has touched it -->
+        <span class="error-text" *ngIf="email?.invalid && email?.touched">
+          Please enter a valid email
+        </span>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          placeholder="Min. 6 characters"
+          [class.invalid]="password?.invalid && password?.touched"
+        />
+        <span class="error-text" *ngIf="password?.invalid && password?.touched">
+          Password must be at least 6 characters
+        </span>
+      </div>
+
+      <!-- API Error Message -->
+      <div class="api-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="loginForm.invalid || isLoading"
+      >
+        <!-- ↑ [disabled] is property binding — disables button
+                when form is invalid or request is in flight -->
+        {{ isLoading ? "Signing in..." : "Sign In" }}
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Don't have an account?
+      <a routerLink="/register">Register here</a>
+      <!-- ↑ routerLink is Angular's equivalent of React Router's
+              <Link to="/register"> — no page reload -->
+    </p>
+  </div>
+</div>
