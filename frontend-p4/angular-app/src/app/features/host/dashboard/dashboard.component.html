@@ -1,1 +1,73 @@
-<p>dashboard works!</p>
+<div class="dashboard-wrapper">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div>
+      <h1>Host Dashboard</h1>
+      <p class="subtitle">Manage your surveys</p>
+    </div>
+    <a routerLink="/host/create" class="btn-primary"> + Create Survey </a>
+  </div>
+
+  <!-- Error -->
+  <div class="api-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="state-box">Loading your surveys...</div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && surveys.length === 0" class="state-box">
+    <p>You haven't created any surveys yet.</p>
+    <a routerLink="/host/create" class="btn-primary">
+      Create your first survey
+    </a>
+  </div>
+
+  <!-- Survey List -->
+  <div *ngIf="!isLoading && surveys.length > 0" class="survey-list">
+    <div *ngFor="let survey of surveys" class="survey-row">
+      <!-- Survey Info -->
+      <div class="survey-info">
+        <h2>{{ survey.title }}</h2>
+        <div class="survey-meta">
+          <span class="points-badge">🏆 {{ survey.points_reward }} pts</span>
+          <span
+            class="status-badge"
+            [class.published]="survey.is_published"
+            [class.draft]="!survey.is_published"
+          >
+            {{ survey.is_published ? "Published" : "Draft" }}
+          </span>
+          <!-- ↑ [class.published] and [class.draft] conditionally
+                  apply CSS classes based on is_published value -->
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="survey-actions">
+        <button class="btn-outline" (click)="manageQuestions(survey.id)">
+          Questions
+        </button>
+
+        <button
+          *ngIf="!survey.is_published"
+          class="btn-toggle"
+          (click)="togglePublish(survey)"
+          [disabled]="togglingId === survey.id"
+        >
+          {{ togglingId === survey.id ? "..." : "Publish" }}
+        </button>
+
+        <!-- Show a static label instead when already published -->
+        <span *ngIf="survey.is_published" class="published-lock">
+          🔒 Published
+        </span>
+
+        <button class="btn-danger" (click)="deleteSurvey(survey)">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

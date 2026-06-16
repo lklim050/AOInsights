@@ -959,12 +959,494 @@ public setUser(user: AuthUser) {
 
 ### Build Host Dashboard
 
-1. Generate Host Dashboard Component
+#### 1. Generate Host Dashboard Component
 
 ```bash
 ng generate component features/host/dashboard
 ng generate component features/host/create-survey
 ng generate component features/host/manage-questions
+```
+
+#### 2. Implement HOST Guard and add to route
+
+```bash
+ng generate guard core/guards/host
+```
+
+- at host.guard.ts, add the following code:
+
+```typescript
+import { inject } from "@angular/core";
+import { CanActivateFn, Router } from "@angular/router";
+import { AuthService } from "../services/auth.service";
+
+export const hostGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (authService.isHost || authService.isAdmin) {
+    return true;
+    // ↑ Only HOST and ADMIN roles can pass
+  }
+
+  router.navigate(["/"]);
+  return false;
+  // ↑ Regular USERs get redirected to home
+};
+```
+
+- at app.routes.ts, insert the guard to the host component path as follows:
+
+```Typescript
+import { hostGuard } from './core/guards/host.guard';
+...
+...
+{path : 'host', component: someHostComponent, canActivate:[HostGuard]}
+...
+...
+```
+
+#### 3. Setup API Methods
+
+- at api.service.ts, add additional code as follows:
+
+```Typescript
+...
+// ── Host Survey Methods ──────────────────────────────
+
+getHostSurveys(): Observable<any> {
+  return this.http.get(`${this.baseUrl}/surveys`);
+  // ↑ GET /surveys returns surveys owned by logged-in host
+}
+
+createSurvey(title: string, pointsReward: number): Observable<any> {
+  return this.http.put(`${this.baseUrl}/surveys`, {
+    title,
+    points_reward: pointsReward,
+    is_published: false
+    // ↑ Always create as draft first — host publishes manually
+  });
+}
+
+updateSurvey(surveyId: number, data: Partial<{title: string, points_reward: number, is_published: boolean}>): Observable<any> {
+  return this.http.patch(`${this.baseUrl}/surveys/${surveyId}`, data);
+}
+
+deleteSurvey(surveyId: number): Observable<any> {
+  return this.http.delete(`${this.baseUrl}/surveys/${surveyId}`);
+}
+
+getSurveyResults(surveyId: number): Observable<any> {
+  return this.http.get(`${this.baseUrl}/surveys/${surveyId}/results`);
+}
+// ── Question Methods ─────────────────────────────────
+
+getQuestions(surveyId: number): Observable<any> {
+  return this.http.get(`${this.baseUrl}/questions/survey/${surveyId}`);
+}
+
+createQuestion(surveyId: number, questionText: string, type: string, options?: string[]): Observable<any> {
+  return this.http.put(`${this.baseUrl}/questions`, {
+    survey_id: surveyId,
+    question_text: questionText,
+    type,
+    options: options || null
+  });
+}
+
+deleteQuestion(questionId: number): Observable<any> {
+  return this.http.delete(`${this.baseUrl}/questions/${questionId}`);
+}
+...
+```
+
+#### 4. Implement Host Dashboard Component Typescript, HTML, CSS
+
+- at dashboard.component.ts, you can add the following code to implement the host dashboard page:
+
+```Typescript
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Router, RouterLink } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
+import { AuthService } from '../../../core/services/auth.service';
+
+interface HostSurvey {
+  id: number;
+  title: string;
+  points_reward: number;
+  is_published: boolean;
+}
+
+@Component({
+  selector: 'app-dashboard',
+  standalone: true,
+  imports: [CommonModule, RouterLink],
+  templateUrl: './dashboard.component.html',
+  styleUrl: './dashboard.component.css'
+})
+export class DashboardComponent implements OnInit {
+  surveys: HostSurvey[] = [];
+  isLoading = true;
+  errorMessage = '';
+  togglingId: number | null = null;
+  // ↑ Tracks which survey is currently being toggled
+  //   to show loading state on that specific card
+
+  constructor(
+    private apiService: ApiService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
+
+  ngOnInit() {
+    this.loadSurveys();
+  }
+
+  loadSurveys() {
+    this.apiService.getHostSurveys().subscribe({
+      next: (res: any) => {
+        this.surveys = res.surveys;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.msg || 'Failed to load surveys.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  togglePublish(survey: HostSurvey) {
+    this.togglingId = survey.id;
+    this.apiService.updateSurvey(survey.id, {
+      is_published: !survey.is_published
+      // ↑ Flip the current published state
+    }).subscribe({
+      next: () => {
+        survey.is_published = !survey.is_published;
+        // ↑ Update local state immediately without re-fetching
+        this.togglingId = null;
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.msg || 'Failed to update survey.';
+        this.togglingId = null;
+      }
+    });
+  }
+
+  manageQuestions(surveyId: number) {
+    this.router.navigate(['/host/manage', surveyId]);
+  }
+
+  deleteSurvey(survey: HostSurvey) {
+    if (!confirm(`Delete "${survey.title}"? This cannot be undone.`)) return;
+    // ↑ Simple browser confirm dialog — good enough for bootcamp
+    //   Production would use a proper modal component
+
+    this.apiService.deleteSurvey(survey.id).subscribe({
+      next: () => {
+        this.surveys = this.surveys.filter(s => s.id !== survey.id);
+        // ↑ Remove from local array without re-fetching
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.msg || 'Failed to delete survey.';
+      }
+    });
+  }
+}
+```
+
+- at at dashboard.component.html, add the following code:
+  _to be added later_
+
+- at at dashboard.component.css, add the following code:
+  _to be added later_
+
+#### 5. Implement Create Survey Component Typescript, HTML, CSS
+
+- at create-survey.component.ts, add the following code:
+
+```Typescript
+import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { ApiService } from '../../../services/api.service';
+
+@Component({
+  selector: 'app-create-survey',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  templateUrl: './create-survey.component.html',
+  styleUrl: './create-survey.component.css'
+})
+export class CreateSurveyComponent {
+  createForm: FormGroup;
+  isLoading = false;
+  errorMessage = '';
+
+  constructor(
+    private fb: FormBuilder,
+    private apiService: ApiService,
+    private router: Router
+  ) {
+    this.createForm = this.fb.group({
+      title: ['', [Validators.required, Validators.minLength(5)]],
+      points_reward: [10, [Validators.required, Validators.min(1), Validators.max(500)]]
+      // ↑ Default 10 points, min 1, max 500
+    });
+  }
+
+  get title() { return this.createForm.get('title'); }
+  get points_reward() { return this.createForm.get('points_reward'); }
+
+  onSubmit() {
+    if (this.createForm.invalid) return;
+
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    const { title, points_reward } = this.createForm.value;
+
+    this.apiService.createSurvey(title, points_reward).subscribe({
+      next: (res: any) => {
+        // Navigate directly to manage questions for the new survey
+        this.router.navigate(['/host/manage', res.survey.id]);
+        // ↑ After creating survey, go straight to adding questions
+        //   res.survey.id comes from your API response:
+        //   { status: "ok", msg: "...", survey: { id: ... } }
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.msg || 'Failed to create survey.';
+        this.isLoading = false;
+      }
+    });
+  }
+}
+```
+
+- at create-survey.component.html, add the following code:
+  _to be added later_
+- at create-survey.component.css, add the following code:
+  _to be added later_
+
+#### 6. Implement Manage Questions Component Typescript, HTML, CSS
+
+- at manage-questions.component.ts, add the following code:
+
+```Typescript
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ApiService, Question } from '../../services/api.service';
+// ↑ Adjust path based on your actual api.service.ts location
+
+@Component({
+  selector: 'app-manage-questions',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  templateUrl: './manage-questions.component.html',
+  styleUrl: './manage-questions.component.css'
+})
+export class ManageQuestionsComponent implements OnInit {
+  surveyId!: number;
+  // ↑ ! tells TypeScript "this will definitely be set
+  //   before use" — set in ngOnInit from route params
+
+  questions: Question[] = [];
+  isLoading = true;
+  isAdding = false;
+  // ↑ Controls showing the add question form
+  errorMessage = '';
+  successMessage = '';
+
+  questionTypes = ['TEXT', 'RADIO', 'CHECKBOX', 'SELECT'];
+  // ↑ Dropdown options for question type selector
+
+  addForm: FormGroup;
+
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private apiService: ApiService,
+    private fb: FormBuilder
+  ) {
+    this.addForm = this.fb.group({
+      question_text: ['', [Validators.required, Validators.minLength(5)]],
+      type: ['RADIO', Validators.required],
+      // ↑ Default to RADIO as it's most common question type
+      options: this.fb.array([])
+      // ↑ FormArray for dynamic options (RADIO, CHECKBOX, SELECT)
+      //   stays empty for TEXT questions
+    });
+  }
+
+  get question_text() { return this.addForm.get('question_text'); }
+  get type() { return this.addForm.get('type'); }
+  get options(): FormArray {
+    return this.addForm.get('options') as FormArray;
+  }
+
+  ngOnInit() {
+    this.surveyId = Number(this.route.snapshot.paramMap.get('surveyId'));
+    this.loadQuestions();
+
+    // Watch for type changes to manage options array
+    this.type?.valueChanges.subscribe(type => {
+      this.onTypeChange(type);
+      // ↑ When host changes question type, reset options
+      //   e.g. switching from RADIO to TEXT clears options
+    });
+  }
+
+  loadQuestions() {
+    this.isLoading = true;
+    this.apiService.getQuestions(this.surveyId).subscribe({
+      next: (res: any) => {
+        this.questions = res.questions;
+        this.isLoading = false;
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.msg || 'Failed to load questions.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  onTypeChange(type: string) {
+    // Clear existing options
+    while (this.options.length) {
+      this.options.removeAt(0);
+    }
+    // ↑ Clear FormArray by removing from the end
+
+    // Pre-populate 2 empty options for choice-based types
+    if (type !== 'TEXT') {
+      this.addOption();
+      this.addOption();
+      // ↑ Start with 2 blank options — host adds more as needed
+    }
+  }
+
+  addOption() {
+    this.options.push(
+      this.fb.control('', Validators.required)
+      // ↑ Each option is a simple required string control
+    );
+  }
+
+  removeOption(index: number) {
+    if (this.options.length <= 2) {
+      this.errorMessage = 'Must have at least 2 options.';
+      return;
+    }
+    // ↑ Enforce minimum 2 options for choice questions
+    this.options.removeAt(index);
+  }
+
+  toggleAddForm() {
+    this.isAdding = !this.isAdding;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    if (this.isAdding) {
+      // Reset form and pre-populate options for default type RADIO
+      this.addForm.reset({ type: 'RADIO', question_text: '' });
+      while (this.options.length) this.options.removeAt(0);
+      this.addOption();
+      this.addOption();
+    }
+  }
+
+  onSubmit() {
+    if (this.addForm.invalid) return;
+
+    const { question_text, type } = this.addForm.value;
+    const optionsValue = type === 'TEXT'
+      ? null
+      : this.options.controls.map(c => c.value);
+    // ↑ TEXT questions have no options — send null
+    //   All other types send the options array
+
+    this.apiService.createQuestion(
+      this.surveyId,
+      question_text,
+      type,
+      optionsValue
+    ).subscribe({
+      next: (res: any) => {
+        this.questions.push(res.question);
+        // ↑ Add new question to local array immediately
+        //   without re-fetching all questions
+        this.successMessage = 'Question added successfully!';
+        this.isAdding = false;
+        this.addForm.reset({ type: 'RADIO', question_text: '' });
+        setTimeout(() => this.successMessage = '', 3000);
+        // ↑ Clear success message after 3 seconds
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.msg || 'Failed to add question.';
+      }
+    });
+  }
+
+  deleteQuestion(question: Question) {
+    if (!confirm(`Delete this question? This cannot be undone.`)) return;
+
+    this.apiService.deleteQuestion(question.id).subscribe({
+      next: () => {
+        this.questions = this.questions.filter(q => q.id !== question.id);
+        // ↑ Remove from local array without re-fetching
+      },
+      error: (err) => {
+        this.errorMessage = err.error?.msg || 'Failed to delete question.';
+      }
+    });
+  }
+
+  getTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      'TEXT': '📝 Text',
+      'RADIO': '🔘 Radio',
+      'CHECKBOX': '☑️ Checkbox',
+      'SELECT': '📋 Select'
+    };
+    return labels[type] || type;
+    // ↑ Friendly display labels for question types
+  }
+
+  goBack() {
+    this.router.navigate(['/host']);
+  }
+}
+```
+
+- at manage-questions.component.html, add the following code:
+  _to be added later_
+- at manage-questions.component.css, add the following code:
+  _to be added later_
+
+#### 7. Route Components
+
+- at app.routes.ts, add the following code to route the host dashboard and create survey components:
+
+```Typescript
+import { DashboardComponent } from './features/host/dashboard/dashboard.component';
+import { CreateSurveyComponent } from './features/host/create-survey/create-survey.component';
+import { ManageQuestionsComponent } from './features/host/manage-questions/manage-questions.component';
+
+...
+...
+{ path: 'host', component: DashboardComponent, canActivate: [authGuard, hostGuard] },
+{ path: 'host/create', component: CreateSurveyComponent, canActivate: [authGuard, hostGuard] },
+{
+  path: 'host/manage/:surveyId',
+  component: ManageQuestionsComponent,
+  canActivate: [authGuard, hostGuard]
+},
+...
+{ path: '**', redirectTo: '' }, // this must be the last route as it catches all unmatched paths
 ```
 
 ## Notes/Annotation

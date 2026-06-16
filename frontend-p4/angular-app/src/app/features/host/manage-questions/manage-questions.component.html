@@ -1,1 +1,131 @@
-<p>manage-questions works!</p>
+<div class="manage-wrapper">
+  <!-- Header -->
+  <div class="manage-header">
+    <div>
+      <button class="back-link" (click)="goBack()">← Back to Dashboard</button>
+      <h1>Manage Questions</h1>
+      <p class="subtitle">Survey ID: {{ surveyId }}</p>
+    </div>
+    <button class="btn-primary" (click)="toggleAddForm()" *ngIf="!isAdding">
+      + Add Question
+    </button>
+  </div>
+
+  <!-- Success Message -->
+  <div class="api-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <!-- Error Message -->
+  <div class="api-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Add Question Form -->
+  <div class="add-form-card" *ngIf="isAdding">
+    <h2>New Question</h2>
+
+    <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
+      <!-- Question Text -->
+      <div class="form-group">
+        <label>Question Text</label>
+        <input
+          type="text"
+          formControlName="question_text"
+          placeholder="e.g. Which MRT line do you use most?"
+          [class.invalid]="question_text?.invalid && question_text?.touched"
+        />
+        <span
+          class="error-text"
+          *ngIf="question_text?.invalid && question_text?.touched"
+        >
+          Question must be at least 5 characters
+        </span>
+      </div>
+
+      <!-- Question Type -->
+      <div class="form-group">
+        <label>Question Type</label>
+        <select formControlName="type" class="select-input">
+          <option *ngFor="let t of questionTypes" [value]="t">
+            {{ getTypeLabel(t) }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Options (for non-TEXT types) -->
+      <div *ngIf="type?.value !== 'TEXT'" class="form-group">
+        <label>Options</label>
+        <div formArrayName="options" class="options-container">
+          <div
+            *ngFor="let option of options.controls; let i = index"
+            class="option-row"
+          >
+            <input
+              type="text"
+              [formControlName]="i"
+              [placeholder]="'Option ' + (i + 1)"
+              class="option-input"
+            />
+            <button type="button" class="btn-remove" (click)="removeOption(i)">
+              ✕
+            </button>
+          </div>
+        </div>
+        <button type="button" class="btn-add-option" (click)="addOption()">
+          + Add Option
+        </button>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="toggleAddForm()">
+          Cancel
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="addForm.invalid">
+          Save Question
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="state-box">Loading questions...</div>
+
+  <!-- Empty State -->
+  <div
+    *ngIf="!isLoading && questions.length === 0 && !isAdding"
+    class="state-box"
+  >
+    <p>No questions yet.</p>
+    <p>Click "+ Add Question" to get started.</p>
+  </div>
+
+  <!-- Questions List -->
+  <div *ngIf="!isLoading && questions.length > 0" class="questions-list">
+    <div
+      *ngFor="let question of questions; let i = index"
+      class="question-card"
+    >
+      <div class="question-top">
+        <span class="question-number">Q{{ i + 1 }}</span>
+        <span class="type-badge">{{ getTypeLabel(question.type) }}</span>
+        <button class="btn-delete" (click)="deleteQuestion(question)">
+          Delete
+        </button>
+      </div>
+
+      <p class="question-text">{{ question.question_text }}</p>
+
+      <!-- Show options if any -->
+      <div
+        *ngIf="question.options && question.options.length > 0"
+        class="options-preview"
+      >
+        <span *ngFor="let opt of question.options" class="option-chip">
+          {{ opt }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

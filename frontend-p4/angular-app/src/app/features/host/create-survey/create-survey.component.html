@@ -1,1 +1,56 @@
-<p>create-survey works!</p>
+<div class="form-wrapper">
+  <div class="form-card">
+    <div class="form-header">
+      <a routerLink="/host" class="back-link">← Back to Dashboard</a>
+      <h1>Create New Survey</h1>
+      <p>Fill in the details below. You can add questions next.</p>
+    </div>
+
+    <form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="title">Survey Title</label>
+        <input
+          id="title"
+          type="text"
+          formControlName="title"
+          placeholder="e.g. MRT Passenger Experience Survey"
+          [class.invalid]="title?.invalid && title?.touched"
+        />
+        <span class="error-text" *ngIf="title?.invalid && title?.touched">
+          Title must be at least 5 characters
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label for="points">Points Reward</label>
+        <input
+          id="points"
+          type="number"
+          formControlName="points_reward"
+          min="1"
+          max="500"
+          [class.invalid]="points_reward?.invalid && points_reward?.touched"
+        />
+        <span
+          class="error-text"
+          *ngIf="points_reward?.invalid && points_reward?.touched"
+        >
+          Points must be between 1 and 500
+        </span>
+        <span class="hint">Points users earn for completing this survey</span>
+      </div>
+
+      <div class="api-error" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="createForm.invalid || isLoading"
+      >
+        {{ isLoading ? "Creating..." : "Create & Add Questions →" }}
+      </button>
+    </form>
+  </div>
+</div>

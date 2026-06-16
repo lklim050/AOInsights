@@ -22,16 +22,17 @@ export class CreateSurveyComponent {
   errorMessage = '';
 
   constructor(
-    private formBuilder: FormBuilder,
+    private fb: FormBuilder,
     private apiService: ApiService,
     private router: Router,
   ) {
-    this.createForm = this.formBuilder.group({
+    this.createForm = this.fb.group({
       title: ['', [Validators.required, Validators.minLength(5)]],
       points_reward: [
         10,
         [Validators.required, Validators.min(1), Validators.max(500)],
       ],
+      // ↑ Default 10 points, min 1, max 500
     });
   }
 
@@ -52,10 +53,14 @@ export class CreateSurveyComponent {
 
     this.apiService.createSurvey(title, points_reward).subscribe({
       next: (res: any) => {
+        // Navigate directly to manage questions for the new survey
         this.router.navigate(['/host/manage', res.survey.id]);
+        // ↑ After creating survey, go straight to adding questions
+        //   res.survey.id comes from your API response:
+        //   { status: "ok", msg: "...", survey: { id: ... } }
       },
       error: (err) => {
-        this.errorMessage = err.error?.msg || 'Failed to create survey';
+        this.errorMessage = err.error?.msg || 'Failed to create survey.';
         this.isLoading = false;
       },
     });

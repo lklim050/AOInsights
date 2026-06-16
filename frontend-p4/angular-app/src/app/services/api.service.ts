@@ -45,4 +45,63 @@ export class ApiService {
   submitSurvey(payload: SubmitPayload): Observable<any> {
     return this.http.put(`${this.baseUrl}/responses/submit`, payload);
   }
+  getHostSurveys(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/surveys`);
+  }
+
+  createSurvey(title: string, pointsReward: number): Observable<any> {
+    return this.http.put(`${this.baseUrl}/surveys`, {
+      title,
+      points_reward: pointsReward,
+      is_published: false,
+    });
+  }
+  updateSurvey(
+    surveyId: number,
+    data: Partial<{
+      title: string;
+      points_reward: number;
+      is_published: boolean;
+    }>,
+  ): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/surveys/${surveyId}`, data);
+  }
+  deleteSurvey(surveyId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/surveys/${surveyId}`);
+  }
+
+  getSurveyResults(surveyId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/surveys/${surveyId}/results`);
+  }
+
+  getQuestions(surveyId: number): Observable<any> {
+    return this.http.get(`${this.baseUrl}/questions/survey/${surveyId}`);
+  }
+
+  createQuestion(
+    surveyId: number,
+    questionText: string,
+    type: string,
+    options?: string[],
+  ): Observable<any> {
+    return this.http.put(`${this.baseUrl}/questions`, {
+      survey_id: surveyId,
+      question_text: questionText,
+      type,
+      options: options || null,
+    });
+  }
+  deleteQuestion(questionId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/questions/${questionId}`);
+  }
+  // updateQuestion(
+  //   questionId: number,
+  //   data: Partial<{
+  //     question_text?: string;
+  //     type?: string;
+  //     options?: string[];
+  //   }>,
+  // ): Observable<any> {
+  //   return this.http.patch(`${this.baseUrl}/questions/${questionId}`, data);
+  // }
 }
