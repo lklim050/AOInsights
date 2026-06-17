@@ -28,6 +28,14 @@ export interface SubmitPayload {
   answers_payload: AnswerItem[];
 }
 
+export interface SurveyResponse {
+  response_id: number;
+  user_id: string;
+  survey_id: string;
+  answers_payload: AnswerItem[];
+  status: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })

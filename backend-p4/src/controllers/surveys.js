@@ -145,8 +145,8 @@ export const getSurveyById = async (req, res) => {
     return res.json({
       status: "ok",
       msg: "entry found",
-      show: survey,
-      check: existingResponse,
+      survey: survey,
+      survey_response: existingResponse,
     });
   } catch (error) {
     console.error(error.message);

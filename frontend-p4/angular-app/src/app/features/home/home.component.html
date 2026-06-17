@@ -12,7 +12,8 @@
     <div class="survey-grid">
       <div class="survey-card" *ngFor="let survey of surveys">
         <div class="card-header">
-          <h2>{{ survey.title }}</h2>
+          <h2>{{ survey.title }}<span *ngIf="survey.isAttempted">✅</span></h2>
+
           <p class="creator-name">by {{ survey.creator.name }}</p>
         </div>
         <div class="card-body">
@@ -22,7 +23,7 @@
         </div>
         <div class="card-footer">
           <button class="btn-primary" (click)="onTakeSurvey(survey.id)">
-            Take Survey
+            {{ survey.isAttempted ? "View Your Responses" : "Take Survey" }}
           </button>
         </div>
       </div>

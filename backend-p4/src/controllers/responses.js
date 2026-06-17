@@ -1,5 +1,47 @@
 import prisma from "../db/prisma.js";
 
+export const postSurveyResponse = async (req, res) => {
+  try {
+    const surveyId = Number(req.params.surveyId);
+    const userId = req.decoded?.id || req.decoded?.uuid;
+    if (!userId) {
+      return res
+        .status(401)
+        .json({ status: "error", msg: "User not found or login" });
+    }
+    const surveyData = await prisma.survey.findUnique({
+      where: { id: surveyId },
+      include: {
+        questions: {
+          orderBy: { id: "asc" },
+        },
+        responses: {
+          where: { user_id: userId },
+        },
+      },
+    });
+
+    if (!surveyData) return res.status(404).json({ msg: "Survey not found" });
+    const myResponse = surveyData.responses[0] || null;
+
+    return res.status(201).json({
+      status: "ok",
+      msg: `Survey ID ${surveyId} fetched successfully`,
+      survey: {
+        id: surveyData.id,
+        title: surveyData.title,
+        questions: surveyData.questions,
+        survey_response: myResponse, // This will contain their submitted answers
+      },
+    });
+  } catch (error) {
+    console.error("❌ postSurveyResponse Error:", error.message);
+    return res
+      .status(500)
+      .json({ status: "error", msg: "Fail to submit survey response" });
+  }
+};
+
 export const submitSurveyResponse = async (req, res) => {
   try {
     const { survey_id, answers_payload } = req.body;

@@ -32,11 +32,77 @@
       >
     </div>
 
-    <form [formGroup]="surveyForm" (ngSubmit)="onSubmit()">
+    <!-- Previous Response Panel -->
+    <div *ngIf="previousResponse" class="previous-response-wrapper">
+      <button class="btn-toggle-response" (click)="togglePreviousResponse()">
+        {{
+          showPreviousResponse
+            ? "▲ Hide My Previous Response"
+            : "▼ View My Previous Response"
+        }}
+      </button>
+      <!-- ↑ Toggle button — only shows if previousResponse exists -->
+
+      <div *ngIf="showPreviousResponse" class="previous-response-panel">
+        <div class="response-meta">
+          <span
+            class="status-badge"
+            [class.approved]="previousResponse.status === 'approved'"
+            [class.flagged]="previousResponse.status === 'flagged'"
+            [class.pending]="previousResponse.status === 'pending'"
+          >
+            {{ previousResponse.status | uppercase }}
+          </span>
+        </div>
+
+        <div
+          *ngFor="let question of survey.questions; let i = index"
+          class="prev-question-block"
+        >
+          <p class="prev-question-text">
+            <span class="question-number">Q{{ i + 1 }}.</span>
+            {{ question.question_text }}
+          </p>
+
+          <!-- Array answer (CHECKBOX) -->
+          <ng-container
+            *ngIf="isArrayAnswer(getAnswerByQuestionId(question.id)!)"
+          >
+            <div class="prev-answer-chips">
+              <span
+                *ngFor="let item of $any(getAnswerByQuestionId(question.id))"
+                class="answer-chip"
+              >
+                ✓ {{ item }}
+              </span>
+            </div>
+          </ng-container>
+
+          <!-- Single answer (TEXT, RADIO, SELECT) -->
+          <p
+            *ngIf="!isArrayAnswer(getAnswerByQuestionId(question.id)!)"
+            class="prev-answer-text"
+          >
+            {{ getAnswerByQuestionId(question.id) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error message showing "already completed" -->
+    <div class="api-error" *ngIf="errorMessage && !isLoading">
+      {{ errorMessage }}
+      <button class="btn-secondary" (click)="goHome()">Back to Surveys</button>
+    </div>
+
+    <form
+      *ngIf="!previousResponse"
+      [formGroup]="surveyForm"
+      (ngSubmit)="onSubmit()"
+    >
       <div formArrayName="answers">
         <!-- ↑ formArrayName links this div to the
               'answers' FormArray in your component -->
-
         <div
           *ngFor="let question of survey.questions; let i = index"
           class="question-block"

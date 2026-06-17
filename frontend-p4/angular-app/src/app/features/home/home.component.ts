@@ -12,6 +12,7 @@ interface Survey {
     // ↑ New field from /surveys/public response
     //   replaces created_by uuid which isn't useful for display
   };
+  isAttempted: boolean;
 }
 
 @Component({

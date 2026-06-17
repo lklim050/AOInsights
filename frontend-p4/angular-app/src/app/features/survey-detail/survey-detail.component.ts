@@ -8,7 +8,12 @@ import {
   FormArray,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ApiService, Question, SurveyDetail } from '../../services/api.service';
+import {
+  ApiService,
+  Question,
+  SurveyDetail,
+  SurveyResponse,
+} from '../../services/api.service';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -28,6 +33,8 @@ export class SurveyDetailComponent implements OnInit {
   pointsEarned = 0;
   newBalance = 0;
   submitted = false;
+  previousResponse: SurveyResponse | null = null;
+  showPreviousResponse = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -50,8 +57,9 @@ export class SurveyDetailComponent implements OnInit {
 
     this.apiService.getSurveyDetail(surveyId).subscribe({
       next: (res: any) => {
-        this.survey = res.show;
-        this.buildForm(res.show.questions);
+        this.survey = res.survey;
+        this.previousResponse = res.survey_response ?? null; // null if no previous response
+        this.buildForm(res.survey.questions);
         this.isLoading = false;
       },
       error: (err) => {
@@ -59,6 +67,22 @@ export class SurveyDetailComponent implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  getAnswerByQuestionId(questionId: number): string | string[] | null {
+    if (!this.previousResponse) return null;
+    const found = this.previousResponse.answers_payload.find(
+      (answer) => answer.question_id === questionId,
+    );
+    return found?.answer ?? null;
+  }
+
+  isArrayAnswer(answer: string | string[]): boolean {
+    return Array.isArray(answer);
+  }
+
+  togglePreviousResponse() {
+    this.showPreviousResponse = !this.showPreviousResponse;
   }
 
   buildForm(questions: Question[]) {
