@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ModalService } from '../../../core/services/modal.service';
 
 interface HostSurvey {
   id: number;
@@ -29,6 +30,7 @@ export class DashboardComponent implements OnInit {
     private apiService: ApiService,
     private authService: AuthService,
     private router: Router,
+    private modalService: ModalService,
   ) {}
 
   ngOnInit() {
@@ -50,23 +52,35 @@ export class DashboardComponent implements OnInit {
 
   togglePublish(survey: HostSurvey) {
     if (survey.is_published) return;
-    if (!confirm(`Publish "${survey.title}"? Action cannot be undone.`)) return;
-    // this.togglingId = survey.id;
-    this.isPublishing = true;
-    this.apiService
-      .updateSurvey(survey.id, {
-        is_published: true, // cannot be undone
+    // if (!confirm(`Publish "${survey.title}"? Action cannot be undone.`)) return;
+
+    this.modalService
+      .confirm({
+        title: 'Publishing Survey...',
+        message: `Publish "${survey.title}"? Action cannot be undone.`,
+        confirmLabel: 'Yes, Confirm Publish',
+        cancelLabel: 'Cancel',
+        danger: false,
       })
-      .subscribe({
-        next: (res: any) => {
-          survey.is_published = true;
-          // this.togglingId = null;
-          this.isPublishing = false;
-        },
-        error: (err) => {
-          this.errorMessage = err.error?.msg || 'Failed to update survey';
-          this.isPublishing = false;
-        },
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        // this.togglingId = survey.id;
+        this.isPublishing = true;
+        this.apiService
+          .updateSurvey(survey.id, {
+            is_published: true, // cannot be undone
+          })
+          .subscribe({
+            next: (res: any) => {
+              survey.is_published = true;
+              // this.togglingId = null;
+              this.isPublishing = false;
+            },
+            error: (err) => {
+              this.errorMessage = err.error?.msg || 'Failed to update survey';
+              this.isPublishing = false;
+            },
+          });
       });
   }
 
@@ -76,16 +90,27 @@ export class DashboardComponent implements OnInit {
 
   deleteSurvey(survey: HostSurvey) {
     if (survey.is_published) return;
-    if (!confirm(`Delete "${survey.title}"? Action cannot be undone.`)) return;
+    // if (!confirm(`Delete "${survey.title}"? Action cannot be undone.`)) return;
 
-    this.apiService.deleteSurvey(survey.id).subscribe({
-      next: () => {
-        this.surveys = this.surveys.filter((s) => s.id !== survey.id);
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.msg || 'Failed to delete survey';
-      },
-    });
+    this.modalService
+      .confirm({
+        title: 'Deleting survey...',
+        message: `Delete "${survey.title}"? Action cannot be undone.`,
+        confirmLabel: 'Yes, Confirm Delete',
+        cancelLabel: 'Cancel',
+        danger: true,
+      })
+      .subscribe((confirmed) => {
+        if (!confirmed) return;
+        this.apiService.deleteSurvey(survey.id).subscribe({
+          next: () => {
+            this.surveys = this.surveys.filter((s) => s.id !== survey.id);
+          },
+          error: (err) => {
+            this.errorMessage = err.error?.msg || 'Failed to delete survey';
+          },
+        });
+      });
   }
 
   viewResults(surveyId: number) {

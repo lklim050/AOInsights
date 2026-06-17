@@ -106,9 +106,9 @@ export const getSurveyById = async (req, res) => {
   try {
     // const { id } = req.body;
     const surveyId = Number(req.params.surveyId);
-    const id = req.decoded?.id || req.decoded?.uuid;
+    const userId = req.decoded?.id || req.decoded?.uuid;
 
-    const user = await prisma.user.findUnique({ where: { uuid: id } });
+    const user = await prisma.user.findUnique({ where: { uuid: userId } });
     if (!user) return res.status(404).json({ msg: "user not found" });
 
     const survey = await prisma.survey.findUnique({
@@ -133,10 +133,20 @@ export const getSurveyById = async (req, res) => {
       });
     }
 
+    const existingResponse = await prisma.surveyResponse.findUnique({
+      where: {
+        user_id_survey_id: {
+          user_id: userId,
+          survey_id: Number(surveyId),
+        },
+      },
+    });
+
     return res.json({
       status: "ok",
       msg: "entry found",
       show: survey,
+      check: existingResponse,
     });
   } catch (error) {
     console.error(error.message);
@@ -216,25 +226,24 @@ export const updateSurvey = async (req, res) => {
   }
 };
 
-// DELETE A SURVEY (With Strict Ownership Check)
 export const deleteSurvey = async (req, res) => {
   try {
     // const { id } = req.body;
     const id = req.decoded?.id || req.decoded?.uuid;
     const surveyId = Number(req.params.surveyId);
 
-    // 1. Verify the user exists
+    // Check if user exist
     const user = await prisma.user.findUnique({ where: { uuid: id } });
     if (!user) return res.status(404).json({ msg: "user not found" });
 
-    // 2. Find the survey
+    // Find duplicate survey
     const existingSurvey = await prisma.survey.findUnique({
       where: { id: surveyId },
     });
     if (!existingSurvey)
       return res.status(404).json({ msg: "entry not found" });
 
-    // 🛡️ 3. STRICT OWNERSHIP CHECK: Does this survey belong to the logged-in host?
+    // check ownership
     if (existingSurvey.created_by !== id) {
       return res.status(403).json({
         status: "error",
@@ -242,7 +251,7 @@ export const deleteSurvey = async (req, res) => {
       });
     }
 
-    // 4. Clean up children constraints and delete primary survey row
+    // Once above check passes, delete entries in both question and survey table
     await prisma.question.deleteMany({ where: { survey_id: surveyId } });
     await prisma.survey.delete({ where: { id: surveyId } });
 
@@ -253,17 +262,72 @@ export const deleteSurvey = async (req, res) => {
   }
 };
 
-// READ ALL PUBLISHED SURVEYS (Accessible by everyone to view/answer)
+// // READ ALL PUBLISHED SURVEYS (Accessible by everyone to view/answer)
+// export const readPublishedSurveys = async (req, res) => {
+//   try {
+//     const userId = req.decoded?.id || req.decoded?.uuid;
+
+//     // Verify the user exists first
+//     const user = await prisma.user.findUnique({
+//       where: { uuid: userId },
+//     });
+//     if (!user) return res.status(404).json({ msg: "user not found" });
+//     // Query the database for surveys that are marked as published
+//     const publishedSurveys = await prisma.survey.findMany({
+//       where: {
+//         is_published: true,
+//       },
+//       select: {
+//         id: true,
+//         title: true,
+//         points_reward: true,
+//         // created_at: true,
+//         // We can optionally include the host's name so users know who created it
+//         creator: {
+//           select: {
+//             name: true,
+//           },
+//         },
+//       },
+//       orderBy: {
+//         created_by: "desc", // Show the newest surveys first
+//       },
+//     });
+
+//     const existingResponse = await prisma.surveyResponse.findUnique({
+//       where: {
+//         user_id_survey_id: {
+//           user_id: userId,
+//           survey_id: Number(surveyId),
+//         },
+//       },
+//     });
+
+//     return res.json({
+//       status: "ok",
+//       count: publishedSurveys.length,
+//       surveys: publishedSurveys,
+//     });
+//   } catch (error) {
+//     console.error(error.message);
+//     return res
+//       .status(500)
+//       .json({ status: "error", msg: "fail to fetch published surveys" });
+//   }
+// };
+
+// READ ALL PUBLISHED SURVEYS
 export const readPublishedSurveys = async (req, res) => {
   try {
-    const id = req.decoded?.id || req.decoded?.uuid;
+    const userId = req.decoded?.id || req.decoded?.uuid;
 
-    // Verify the user exists first
+    // Verify the user exists
     const user = await prisma.user.findUnique({
-      where: { uuid: id },
+      where: { uuid: userId },
     });
     if (!user) return res.status(404).json({ msg: "user not found" });
-    // Query the database for surveys that are marked as published
+
+    // Query published surveys and include the user's specific response if it exists
     const publishedSurveys = await prisma.survey.findMany({
       where: {
         is_published: true,
@@ -272,23 +336,35 @@ export const readPublishedSurveys = async (req, res) => {
         id: true,
         title: true,
         points_reward: true,
-        // created_at: true,
-        // We can optionally include the host's name so users know who created it
         creator: {
+          select: { name: true },
+        },
+        // Include responses but filter by the current user_id
+        responses: {
+          where: {
+            user_id: userId,
+          },
           select: {
-            name: true,
+            id: true, // If this returns an object, they have responded
           },
         },
       },
       orderBy: {
-        created_by: "desc", // Show the newest surveys first
+        created_by: "desc", // Note: Ensure this field exists in your schema
       },
     });
 
+    // Transform the result to add an 'isAttempted' boolean flag for the frontend
+    const surveysWithStatus = publishedSurveys.map((survey) => ({
+      ...survey,
+      isAttempted: survey.responses.length > 0, // True if they have a response
+      responses: undefined, // Optional: remove the responses array from response
+    }));
+
     return res.json({
       status: "ok",
-      count: publishedSurveys.length,
-      surveys: publishedSurveys,
+      count: surveysWithStatus.length,
+      surveys: surveysWithStatus,
     });
   } catch (error) {
     console.error(error.message);

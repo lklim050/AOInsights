@@ -76,6 +76,7 @@ export const submitSurveyResponse = async (req, res) => {
       reward_points: survey.points_reward,
       new_total_balance: result.newBalance,
       response_id: result.newResponse.id,
+      show: existingResponse,
     });
   } catch (error) {
     console.error("❌ submitSurveyResponse Error:", error.message);

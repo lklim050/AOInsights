@@ -1,0 +1,31 @@
+<!-- Backdrop -->
+<div class="modal-backdrop" *ngIf="isVisible" (click)="onCancel()">
+  <!-- ↑ Clicking backdrop = cancel, same as clicking X -->
+
+  <!-- Modal Box — stopPropagation prevents backdrop click
+       from firing when clicking inside the modal -->
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <!-- Icon -->
+    <div class="modal-icon" [class.danger]="config.danger">
+      {{ config.danger ? "⚠️" : "❓" }}
+    </div>
+
+    <!-- Content -->
+    <h2 class="modal-title">{{ config.title }}</h2>
+    <p class="modal-message">{{ config.message }}</p>
+
+    <!-- Actions -->
+    <div class="modal-actions">
+      <button class="btn-cancel" (click)="onCancel()">
+        {{ config.cancelLabel }}
+      </button>
+      <button
+        class="btn-confirm"
+        [class.danger]="config.danger"
+        (click)="onConfirm()"
+      >
+        {{ config.confirmLabel }}
+      </button>
+    </div>
+  </div>
+</div>
