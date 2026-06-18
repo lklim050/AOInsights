@@ -37,3 +37,52 @@
 
 - Either install dependencies one by one using npm i <dependency-name> or install all dependencies at once using npm i
 - If you have a package.json file with all dependencies listed.
+
+## Z. Try Gemini AI API
+
+- at .env file, add the following line:
+
+```
+GEMINI_API_KEY=your_api_key_here
+```
+
+- npm install @google/genai
+
+- the following code snippet is an example of how to use the Gemini AI API in your project:
+
+```javascript
+import { GoogleGenAI } from "@google/genai";
+
+// Initialize with your API Key from your .env file
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export const getSurveyInsights = async (req, res) => {
+  try {
+    const { surveyId } = req.params;
+
+    // 1. Fetch your aggregated survey results (from your existing logic)
+    const results = await fetchSurveyData(surveyId);
+
+    // 2. Prepare the prompt
+    const prompt = `
+      You are a data analyst. Below are survey results in JSON format. 
+      Analyze the trends, summarize text feedback, and provide 3 actionable 
+      recommendations for the host based on the context of the survey results. 
+      JSON: ${JSON.stringify(results)}
+    `;
+
+    // 3. Call Gemini
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash", // Using a fast, cost-effective model
+      contents: prompt,
+    });
+
+    return res.json({
+      status: "ok",
+      insights: response.text(),
+    });
+  } catch (error) {
+    return res.status(500).json({ msg: "AI analysis failed" });
+  }
+};
+```

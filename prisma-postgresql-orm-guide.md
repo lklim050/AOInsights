@@ -52,9 +52,9 @@ That creates:
 Use a PostgreSQL connection string instead of the current Mongo one.
 
 ```env
-DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:5432/askyousomethingha_db?schema=public"
+DATABASE_URL="postgresql://postgres:YOUR_PASSWORD@localhost:some-number/askyousomethingha_db?schema=public"
 JWT_SECRET="your-secret"
-PORT=5001
+PORT=some-port-number
 ```
 
 ## Suggested Prisma Schema
@@ -141,6 +141,13 @@ npx prisma migrate dev --name init
 ```bash
 npx prisma db push
 npx prisma generate
+```
+
+or
+
+```bash
+npx prisma db push --schema=./prisma/schema.prisma
+npx prisma generate --schema=./prisma/schema.prisma
 ```
 
 note: if there is existing data and mismatch between schema and database, `db push` may fail. In that case, you can use `npx prisma db push --force-reset` to drop and recreate the database tables based on the current schema. Be cautious with this command as it will delete existing data.

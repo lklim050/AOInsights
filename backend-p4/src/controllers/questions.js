@@ -38,14 +38,6 @@ export const createQuestion = async (req, res) => {
         .status(ownership.error)
         .json({ status: "error", msg: ownership.msg });
 
-    // // check published status, prevent changes if already published
-    // if (survey.is_published) {
-    //   return res.status(400).json({
-    //     status: "error",
-    //     msg: "Cannot add questions to a live survey. Please unpublish or clone it first.",
-    //   });
-    // }
-
     // check duplicates
     const existingQuestion = await prisma.question.findFirst({
       where: {

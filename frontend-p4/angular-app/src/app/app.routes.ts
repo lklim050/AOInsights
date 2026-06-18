@@ -8,6 +8,7 @@ import { hostGuard } from './core/guards/host.guard';
 import { CreateSurveyComponent } from './features/host/create-survey/create-survey.component';
 import { DashboardComponent } from './features/host/dashboard/dashboard.component';
 import { ManageQuestionsComponent } from './features/host/manage-questions/manage-questions.component';
+import { ResultsComponent } from './features/host/results/results.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -31,6 +32,11 @@ export const routes: Routes = [
   {
     path: 'host/manage/:surveyId',
     component: ManageQuestionsComponent,
+    canActivate: [authGuard, hostGuard],
+  },
+  {
+    path: 'host/results/:surveyId',
+    component: ResultsComponent,
     canActivate: [authGuard, hostGuard],
   },
   { path: '**', redirectTo: '' },

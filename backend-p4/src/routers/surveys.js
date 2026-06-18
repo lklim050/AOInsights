@@ -9,7 +9,10 @@ import {
   updateSurvey,
 } from "../controllers/surveys.js";
 import { auth, authHost } from "../middlewares/users.js";
-import { getSurveyResults } from "../controllers/responses.js";
+import {
+  getSurveyInsights,
+  getSurveyResults,
+} from "../controllers/responses.js";
 
 const router = express.Router();
 
@@ -21,5 +24,6 @@ router.patch("/:surveyId", authHost, updateSurvey);
 router.delete("/:surveyId", authHost, deleteSurvey);
 router.post("/:surveyId", auth, getSurveyById);
 router.get("/:surveyId/results", authHost, getSurveyResults);
+router.post("/:surveyId/insights", authHost, getSurveyInsights);
 
 export default router;

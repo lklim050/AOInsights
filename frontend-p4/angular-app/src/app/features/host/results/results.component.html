@@ -1,0 +1,97 @@
+<div class="results-wrapper">
+  <!-- Header -->
+  <div class="results-header">
+    <button class="back-link" (click)="goBack()">← Back to Dashboard</button>
+    <div class="header-content" *ngIf="data">
+      <h1>{{ data.survey_title }}</h1>
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-number">{{ data.total_submissions }}</span>
+          <span class="stat-label">Total Submissions</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number">{{ questionEntries.length }}</span>
+          <span class="stat-label">Questions</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="state-box">Loading results...</div>
+
+  <!-- Error -->
+  <div *ngIf="errorMessage" class="api-error">
+    {{ errorMessage }}
+  </div>
+
+  <!-- No Submissions Yet -->
+  <div *ngIf="!isLoading && data?.total_submissions === 0" class="state-box">
+    <p>📭 No submissions yet.</p>
+    <p>Share your survey to start collecting responses.</p>
+  </div>
+
+  <!-- Results -->
+  <div
+    *ngIf="!isLoading && data && data.total_submissions > 0"
+    class="questions-results"
+  >
+    <div
+      *ngFor="let entry of questionEntries; let i = index"
+      class="result-card"
+    >
+      <!-- Question Header -->
+      <div class="result-header">
+        <span class="question-number">Q{{ i + 1 }}</span>
+        <span class="type-badge">{{ entry.result.type }}</span>
+      </div>
+      <p class="question-text">{{ entry.result.question_text }}</p>
+
+      <!-- Choice Questions: Bar Chart -->
+      <div *ngIf="isChoiceType(entry.result.type)" class="bar-chart">
+        <div
+          *ngFor="let item of getCountEntries(entry.result.counts)"
+          class="bar-row"
+        >
+          <span class="bar-label">{{ item.label }}</span>
+
+          <div class="bar-track">
+            <div
+              class="bar-fill"
+              [style.width.%]="getBarWidth(item.count, entry.result.counts)"
+            >
+              <!-- ↑ [style.width.%] dynamically sets the CSS width
+                      as a percentage — this creates our bar chart
+                      without any external chart library -->
+            </div>
+          </div>
+
+          <span class="bar-count">
+            {{ item.count }}
+            <span class="bar-pct">
+              ({{ getBarWidth(item.count, entry.result.counts) }}%)
+            </span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Text Questions: Response List -->
+      <div *ngIf="entry.result.type === 'TEXT'" class="text-responses">
+        <div
+          *ngFor="let response of entry.result.text_responses"
+          class="text-response-item"
+        >
+          <span class="quote-mark">"</span>
+          {{ response }}
+          <span class="quote-mark">"</span>
+        </div>
+        <p
+          *ngIf="entry.result.text_responses.length === 0"
+          class="no-responses"
+        >
+          No text responses yet.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

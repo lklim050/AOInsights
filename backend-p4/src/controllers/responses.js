@@ -1,4 +1,21 @@
 import prisma from "../db/prisma.js";
+import { processSurveyResults } from "../utils/resultProcessor.js";
+import { GoogleGenAI } from "@google/genai";
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+export const hostVerification = async (surveyId, hostId) => {
+  // Check survey ownership
+  const survey = await prisma.survey.findUnique({
+    where: { id: surveyId },
+  });
+
+  if (!survey) return { error: 404, msg: "Survey not found" };
+  if (survey.created_by !== hostId) {
+    return { error: 403, msg: "You do not own this survey" };
+  }
+  return { success: true, survey };
+};
 
 export const postSurveyResponse = async (req, res) => {
   try {
@@ -133,101 +150,32 @@ export const getSurveyResults = async (req, res) => {
     const surveyId = Number(req.params.surveyId);
     const hostId = req.decoded?.id || req.decoded?.uuid;
 
-    // 1. Verify ownership: Ensure the host running results view actually owns this survey
-    const survey = await prisma.survey.findUnique({
-      where: { id: surveyId },
-    });
-
-    if (!survey)
-      return res.status(404).json({ status: "error", msg: "Survey not found" });
-    if (survey.created_by !== hostId) {
+    const hostVerify = await hostVerification(surveyId, hostId);
+    if (hostVerify.error) {
       return res
-        .status(403)
-        .json({ status: "error", msg: "Unauthorised access to results" });
+        .status(hostVerify.error)
+        .json({ status: "error", msg: hostVerify.msg });
     }
 
-    // 2. Fetch all questions belonging to this survey (to map out option defaults)
+    // Get all questions relating to the target survey by id
     const questions = await prisma.question.findMany({
       where: { survey_id: surveyId },
       orderBy: { id: "asc" },
     });
 
-    // 3. Fetch all recorded responses submitted by commuters
+    // Get all responses relating to the target survey by id
     const responses = await prisma.surveyResponse.findMany({
       where: { survey_id: surveyId },
     });
 
-    const totalSubmissions = responses.length;
+    // After all checks done, processing of resutls start here
 
-    // 4. Initialize results summary structure
-    const resultsSummary = {};
+    const { totalSubmissions, resultsSummary } = processSurveyResults(
+      questions,
+      responses,
+    );
 
-    questions.forEach((q) => {
-      if (q.type === "TEXT") {
-        resultsSummary[q.id] = {
-          question_text: q.question_text,
-          type: q.type,
-          text_responses: [], // Text inputs will hold an array of strings literately
-        };
-      } else {
-        // For RADIO, CHECKBOX, SELECT: Initialize all configured options with a count of 0
-        const optionCounts = {};
-        if (Array.isArray(q.options)) {
-          q.options.forEach((opt) => {
-            optionCounts[opt] = 0;
-          });
-        }
-
-        resultsSummary[q.id] = {
-          question_text: q.question_text,
-          type: q.type,
-          counts: optionCounts,
-          total_selections_counted: 0,
-        };
-      }
-    });
-
-    // 5. Loop through the JSON payloads and aggregate values
-    responses.forEach((resp) => {
-      const payload = resp.answers_payload; // This is the JSON array from the DB
-
-      if (!Array.isArray(payload)) return;
-
-      payload.forEach((item) => {
-        const { question_id, answer } = item;
-
-        // Skip if the question no longer exists in the summary tracking object
-        if (!resultsSummary[question_id]) return;
-
-        const targetQuestion = resultsSummary[question_id];
-
-        if (targetQuestion.type === "TEXT") {
-          // Push plain strings directly if answer exists and isn't empty
-          if (answer && typeof answer === "string" && answer.trim() !== "") {
-            targetQuestion.text_responses.push(answer.trim());
-          }
-        } else {
-          // Handle Choice Inputs (RADIO, SELECT, CHECKBOX)
-          if (Array.isArray(answer)) {
-            // Checkbox multi-selections arrive as arrays
-            answer.forEach((individualChoice) => {
-              if (targetQuestion.counts[individualChoice] !== undefined) {
-                targetQuestion.counts[individualChoice] += 1;
-                targetQuestion.total_selections_counted += 1;
-              }
-            });
-          } else if (answer !== undefined && answer !== null) {
-            // Radio & Dropdown Select selections arrive as a single string/value
-            if (targetQuestion.counts[answer] !== undefined) {
-              targetQuestion.counts[answer] += 1;
-              targetQuestion.total_selections_counted += 1;
-            }
-          }
-        }
-      });
-    });
-
-    // 6. Return the processed aggregated data package
+    // Return the processed aggregated results here
     return res.json({
       status: "ok",
       survey_title: survey.title,
@@ -239,5 +187,97 @@ export const getSurveyResults = async (req, res) => {
     return res
       .status(500)
       .json({ status: "error", msg: "Fail to compile survey results" });
+  }
+};
+
+export const getSurveyInsights = async (req, res) => {
+  try {
+    const surveyId = Number(req.params.surveyId);
+    const hostId = req.decoded?.id || req.decoded?.uuid;
+
+    const hostVerify = await hostVerification(surveyId, hostId);
+    if (hostVerify.error) {
+      return res
+        .status(hostVerify.error)
+        .json({ status: "error", msg: hostVerify.msg });
+    }
+
+    // Get all questions relating to the target survey by id
+    const questions = await prisma.question.findMany({
+      where: { survey_id: surveyId },
+      orderBy: { id: "asc" },
+    });
+
+    // Get all responses relating to the target survey by id
+    const responses = await prisma.surveyResponse.findMany({
+      where: { survey_id: surveyId },
+    });
+
+    // Process results with help of processSurveyResults function
+    const { totalSubmissions, resultsSummary } = processSurveyResults(
+      questions,
+      responses,
+    );
+
+    const existingInsight = await prisma.surveyInsight.findUnique({
+      where: { survey_id: surveyId },
+    });
+
+    const lastCount = existingInsight ? existingInsight.submission_count : 0;
+    const getInsight = !existingInsight || totalSubmissions > lastCount + 5;
+
+    if (!getInsight)
+      return res.status(200).json({
+        status: "ok",
+        msg: "no need to refresh, will fetch previous Insight",
+        insights: existingInsight,
+        last_created_at: existingInsight.createdAt,
+      });
+
+    // AI Generation starts here if no existing insights
+    const prompt = `
+      You are a data analyst. Below are survey results in JSON format. 
+      Analyze the trends, summarize text feedback, and provide 3 actionable 
+      recommendations for the host. 
+      JSON: ${JSON.stringify(resultsSummary)}
+    `;
+
+    const aiModel = "gemini-3.1-flash-lite";
+
+    const result = await ai.models.generateContent({
+      model: aiModel, // Alternative to try
+      contents: prompt,
+    });
+
+    const insight = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (!insight) {
+      throw new Error("AI returned an empty response");
+    }
+
+    const updatedInsight = await prisma.surveyInsight.upsert({
+      where: { survey_id: surveyId },
+      update: {
+        summary: insight,
+        submission_count: totalSubmissions,
+      },
+      create: {
+        survey_id: surveyId,
+        summary: insight,
+        submission_count: totalSubmissions,
+      },
+    });
+
+    return res.status(200).json({
+      status: "ok",
+      source: aiModel,
+      insights: updatedInsight,
+      last_created_at: updatedInsight.createdAt,
+    });
+  } catch (error) {
+    console.error("❌ getSurveyInsights Error:", error.message);
+    res
+      .status(500)
+      .json({ status: "error", msg: "Fail to generate insights with AI" });
   }
 };
