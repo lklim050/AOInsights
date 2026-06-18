@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../services/api.service';
-import { AuthService } from '../../../core/services/auth.service';
+import { AuthService, AuthUser } from '../../../core/services/auth.service';
 import { ModalService } from '../../../core/services/modal.service';
 
 interface HostSurvey {
@@ -23,7 +23,6 @@ export class DashboardComponent implements OnInit {
   surveys: HostSurvey[] = [];
   isLoading = true;
   errorMessage = '';
-  // togglingId: number | null = null;
   isPublishing = false;
 
   constructor(
@@ -35,6 +34,10 @@ export class DashboardComponent implements OnInit {
 
   ngOnInit() {
     this.loadSurveys();
+  }
+
+  get currentUser() {
+    return this.authService.currentUser;
   }
 
   loadSurveys() {

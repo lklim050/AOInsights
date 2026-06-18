@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ApiService } from '../../services/api.service';
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 interface Survey {
   id: number;
@@ -31,6 +32,7 @@ export class HomeComponent implements OnInit {
 
   constructor(
     private apiService: ApiService,
+    private authService: AuthService,
     private router: Router,
   ) {}
 
@@ -47,6 +49,11 @@ export class HomeComponent implements OnInit {
       },
     });
   }
+
+  get currentUser() {
+    return this.authService.currentUser;
+  }
+
   onTakeSurvey(surveyId: number) {
     this.router.navigate(['/survey', surveyId]);
   }

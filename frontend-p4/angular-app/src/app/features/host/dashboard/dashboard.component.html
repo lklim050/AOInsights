@@ -3,7 +3,9 @@
   <div class="dashboard-header">
     <div>
       <h1>Host Dashboard</h1>
-      <p class="subtitle">Manage your surveys</p>
+      <p class="subtitle">
+        Hi {{ currentUser?.name }}, You can manage your surveys here:
+      </p>
     </div>
     <a routerLink="/host/create" class="btn-primary"> + Create Survey </a>
   </div>

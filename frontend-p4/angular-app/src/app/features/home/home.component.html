@@ -7,7 +7,10 @@
 
   <div *ngIf="!isLoading && !errorMessage">
     <h1>Surveys List</h1>
-    <p class="subtitle">Available Surveys below:</p>
+    <p class="subtitle">
+      Hi {{ currentUser?.name }}, Here are some surveys available below to earn
+      points 🏆!:
+    </p>
 
     <div class="survey-grid">
       <div class="survey-card" *ngFor="let survey of surveys">

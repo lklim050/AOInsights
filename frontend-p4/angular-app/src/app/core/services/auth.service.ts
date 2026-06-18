@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 export interface AuthUser {
   uuid: string;
   email: string;
+  name: string;
   role: 'USER' | 'HOST' | 'ADMIN';
   access: string;
   refresh: string;

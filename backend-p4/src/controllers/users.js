@@ -89,6 +89,7 @@ export const loginUser = async (req, res) => {
       refresh,
       uuid: user.uuid,
       email: user.email,
+      name: user.name,
       role: user.role,
       points_bal: user.points_bal,
     });
