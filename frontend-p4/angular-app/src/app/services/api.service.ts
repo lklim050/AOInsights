@@ -112,4 +112,15 @@ export class ApiService {
   // ): Observable<any> {
   //   return this.http.patch(`${this.baseUrl}/questions/${questionId}`, data);
   // }
+
+  updateQuestion(
+    questionId: number,
+    data: {
+      question_text?: string;
+      type?: string;
+      options?: string[];
+    },
+  ): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/questions/${questionId}`, data);
+  }
 }

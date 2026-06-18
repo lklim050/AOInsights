@@ -27,6 +27,15 @@ export class ManageQuestionsComponent implements OnInit {
   successMessage = '';
   questionTypes = ['TEXT', 'RADIO', 'CHECKBOX', 'SELECT'];
   addForm: FormGroup;
+  // ── New Edit Properties ──────────────────────────
+  editingQuestionId: number | null = null;
+  // ↑ Tracks which question is currently being edited
+  //   null means no question is in edit mode
+  editForm: FormGroup;
+  // ↑ Separate form for editing — keeps add and edit
+  //   forms independent of each other
+  isUpdating = false;
+  // ↑ Loading state for the update API call
 
   constructor(
     private formBuilder: FormBuilder,
@@ -35,6 +44,12 @@ export class ManageQuestionsComponent implements OnInit {
     private route: ActivatedRoute,
   ) {
     this.addForm = this.formBuilder.group({
+      question_text: ['', [Validators.required, Validators.minLength(5)]],
+      type: ['RADIO', Validators.required],
+      options: this.formBuilder.array([]),
+    });
+    // Edit form has same structure as add form
+    this.editForm = this.formBuilder.group({
       question_text: ['', [Validators.required, Validators.minLength(5)]],
       type: ['RADIO', Validators.required],
       options: this.formBuilder.array([]),
@@ -50,6 +65,17 @@ export class ManageQuestionsComponent implements OnInit {
   get options(): FormArray {
     return this.addForm.get('options') as FormArray;
   }
+  // ── New Edit Getters ─────────────────────────────
+  get editQuestionText() {
+    return this.editForm.get('question_text');
+  }
+  get editType() {
+    return this.editForm.get('type');
+  }
+  get editOptions(): FormArray {
+    return this.editForm.get('options') as FormArray;
+    // ↑ Separate getter for edit form's options array
+  }
 
   ngOnInit() {
     this.surveyId = Number(this.route.snapshot.paramMap.get('surveyId'));
@@ -58,6 +84,11 @@ export class ManageQuestionsComponent implements OnInit {
     this.type?.valueChanges.subscribe((type) => {
       this.onTypeChange(type);
       //render whenever type selection changes
+    });
+    // Watch edit form type changes too
+    this.editType?.valueChanges.subscribe((type) => {
+      this.onEditTypeChange(type);
+      // ↑ Same pattern as add form but for edit form
     });
   }
 
@@ -163,5 +194,99 @@ export class ManageQuestionsComponent implements OnInit {
   }
   goBack() {
     this.router.navigate(['/host']);
+  }
+  // ── New Edit Methods ─────────────────────────────
+
+  onEditTypeChange(type: string) {
+    while (this.editOptions.length) this.editOptions.removeAt(0);
+    if (type !== 'TEXT') {
+      this.addEditOption();
+      this.addEditOption();
+    }
+  }
+
+  addEditOption() {
+    this.editOptions.push(this.formBuilder.control('', Validators.required));
+  }
+
+  removeEditOption(index: number) {
+    if (this.editOptions.length <= 2) {
+      this.errorMessage = 'Must have at least 2 options.';
+      return;
+    }
+    this.editOptions.removeAt(index);
+  }
+
+  startEdit(question: Question) {
+    this.editingQuestionId = question.id;
+    this.isAdding = false;
+    // ↑ Close add form if open
+    this.errorMessage = '';
+
+    // Pre-populate edit form with existing question data
+    this.editForm.patchValue({
+      question_text: question.question_text,
+      type: question.type,
+      // ↑ patchValue updates specific fields without
+      //   resetting the entire form — unlike setValue
+      //   which requires ALL fields to be provided
+    });
+
+    // Rebuild options array from existing options
+    while (this.editOptions.length) this.editOptions.removeAt(0);
+    if (question.options && question.options.length > 0) {
+      question.options.forEach((opt) => {
+        this.editOptions.push(
+          this.formBuilder.control(opt, Validators.required),
+        );
+        // ↑ Pre-fill each option with existing value
+      });
+    }
+  }
+
+  cancelEdit() {
+    this.editingQuestionId = null;
+    this.editForm.reset();
+    this.errorMessage = '';
+    // ↑ Clear edit state without saving
+  }
+
+  onUpdate(question: Question) {
+    if (this.editForm.invalid) return;
+
+    this.isUpdating = true;
+    this.errorMessage = '';
+
+    const { question_text, type } = this.editForm.value;
+    const optionsValue =
+      type === 'TEXT'
+        ? undefined
+        : this.editOptions.controls.map((c) => c.value);
+
+    this.apiService
+      .updateQuestion(question.id, {
+        question_text,
+        type,
+        options: optionsValue,
+      })
+      .subscribe({
+        next: (res: any) => {
+          // Update the question in local array
+          const index = this.questions.findIndex((q) => q.id === question.id);
+          if (index !== -1) {
+            this.questions[index] = res.question;
+            // ↑ Replace old question with updated one from API
+            //   Keeps local state in sync with database
+          }
+          this.editingQuestionId = null;
+          this.isUpdating = false;
+          this.successMessage = 'Question updated successfully!';
+          setTimeout(() => (this.successMessage = ''), 3000);
+        },
+        error: (err) => {
+          this.errorMessage = err.error?.msg || 'Failed to update question.';
+          this.isUpdating = false;
+        },
+      });
   }
 }

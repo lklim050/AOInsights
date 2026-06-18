@@ -21,18 +21,16 @@
     {{ errorMessage }}
   </div>
 
-  <!-- Add Question Form -->
+  <!-- Add Question Form (unchanged) -->
   <div class="add-form-card" *ngIf="isAdding">
     <h2>New Question</h2>
-
     <form [formGroup]="addForm" (ngSubmit)="onSubmit()">
-      <!-- Question Text -->
       <div class="form-group">
         <label>Question Text</label>
         <input
           type="text"
           formControlName="question_text"
-          placeholder="e.g. type your question here..."
+          placeholder="e.g. Which MRT line do you use most?"
           [class.invalid]="question_text?.invalid && question_text?.touched"
         />
         <span
@@ -43,7 +41,6 @@
         </span>
       </div>
 
-      <!-- Question Type -->
       <div class="form-group">
         <label>Question Type</label>
         <select formControlName="type" class="select-input">
@@ -53,7 +50,6 @@
         </select>
       </div>
 
-      <!-- Options (for non-TEXT types) -->
       <div *ngIf="type?.value !== 'TEXT'" class="form-group">
         <label>Options</label>
         <div formArrayName="options" class="options-container">
@@ -77,7 +73,6 @@
         </button>
       </div>
 
-      <!-- Form Actions -->
       <div class="form-actions">
         <button type="button" class="btn-secondary" (click)="toggleAddForm()">
           Cancel
@@ -97,8 +92,7 @@
     *ngIf="!isLoading && questions.length === 0 && !isAdding"
     class="state-box"
   >
-    <p>No questions yet.</p>
-    <p>Click "+ Add Question" to get started.</p>
+    <p>No questions yet. Click "+ Add Question" to get started.</p>
   </div>
 
   <!-- Questions List -->
@@ -107,25 +101,116 @@
       *ngFor="let question of questions; let i = index"
       class="question-card"
     >
-      <div class="question-top">
-        <span class="question-number">Q{{ i + 1 }}</span>
-        <span class="type-badge">{{ getTypeLabel(question.type) }}</span>
-        <button class="btn-delete" (click)="deleteQuestion(question)">
-          Delete
-        </button>
-      </div>
+      <!-- View Mode -->
+      <ng-container *ngIf="editingQuestionId !== question.id">
+        <!-- ↑ Show normal card when NOT editing this question -->
 
-      <p class="question-text">{{ question.question_text }}</p>
+        <div class="question-top">
+          <span class="question-number">Q{{ i + 1 }}</span>
+          <span class="type-badge">{{ getTypeLabel(question.type) }}</span>
+          <div class="question-actions">
+            <button class="btn-edit" (click)="startEdit(question)">Edit</button>
+            <button class="btn-delete" (click)="deleteQuestion(question)">
+              Delete
+            </button>
+          </div>
+        </div>
 
-      <!-- Show options if any -->
-      <div
-        *ngIf="question.options && question.options.length > 0"
-        class="options-preview"
-      >
-        <span *ngFor="let opt of question.options" class="option-chip">
-          {{ opt }}
-        </span>
-      </div>
+        <p class="question-text">{{ question.question_text }}</p>
+
+        <div
+          *ngIf="question.options && question.options.length > 0"
+          class="options-preview"
+        >
+          <span *ngFor="let opt of question.options" class="option-chip">
+            {{ opt }}
+          </span>
+        </div>
+      </ng-container>
+
+      <!-- Edit Mode -->
+      <ng-container *ngIf="editingQuestionId === question.id">
+        <!-- ↑ Show edit form ONLY for this specific question
+              Other questions remain in view mode -->
+
+        <div class="edit-form-header">
+          <span class="question-number">Q{{ i + 1 }} — Editing</span>
+        </div>
+
+        <form [formGroup]="editForm" (ngSubmit)="onUpdate(question)">
+          <div class="form-group">
+            <label>Question Text</label>
+            <input
+              type="text"
+              formControlName="question_text"
+              [class.invalid]="
+                editQuestionText?.invalid && editQuestionText?.touched
+              "
+            />
+            <span
+              class="error-text"
+              *ngIf="editQuestionText?.invalid && editQuestionText?.touched"
+            >
+              Question must be at least 5 characters
+            </span>
+          </div>
+
+          <div class="form-group">
+            <label>Question Type</label>
+            <select formControlName="type" class="select-input">
+              <option *ngFor="let t of questionTypes" [value]="t">
+                {{ getTypeLabel(t) }}
+              </option>
+            </select>
+          </div>
+
+          <div *ngIf="editType?.value !== 'TEXT'" class="form-group">
+            <label>Options</label>
+            <div formArrayName="options" class="options-container">
+              <!-- ↑ Note: formArrayName uses 'options' which maps
+                    to editForm's options FormArray via editOptions getter -->
+              <div
+                *ngFor="let option of editOptions.controls; let j = index"
+                class="option-row"
+              >
+                <input
+                  type="text"
+                  [formControlName]="j"
+                  [placeholder]="'Option ' + (j + 1)"
+                  class="option-input"
+                />
+                <button
+                  type="button"
+                  class="btn-remove"
+                  (click)="removeEditOption(j)"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn-add-option"
+              (click)="addEditOption()"
+            >
+              + Add Option
+            </button>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" class="btn-secondary" (click)="cancelEdit()">
+              Cancel
+            </button>
+            <button
+              type="submit"
+              class="btn-primary"
+              [disabled]="editForm.invalid || isUpdating"
+            >
+              {{ isUpdating ? "Saving..." : "Save Changes" }}
+            </button>
+          </div>
+        </form>
+      </ng-container>
     </div>
   </div>
 </div>
