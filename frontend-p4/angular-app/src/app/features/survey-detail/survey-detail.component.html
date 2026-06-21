@@ -17,6 +17,15 @@
       <span>+{{ pointsEarned }} pts earned</span>
     </div>
     <div class="new-balance">New balance: ⭐ {{ newBalance }} pts</div>
+    <br />
+    <span>You are currently at {{ currentTier.name }}</span>
+    <p class="progress-text" *ngIf="nextTier">
+      <strong>{{ pointsToNextTier }} pts</strong> needed to reach
+      {{ nextTier.label }}
+    </p>
+    <p class="progress-text" *ngIf="!nextTier">
+      You've reached the highest tier! 🏆
+    </p>
     <button class="btn-primary" (click)="goHome()">Back to Surveys</button>
   </div>
 

@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService, AuthUser } from '../../core/services/auth.service';
 import { ApiService } from '../../services/api.service';
 
-interface Tier {
+export interface Tier {
   name: string;
   label: string;
   minPoints: number;
@@ -24,6 +24,7 @@ export class ProfileComponent implements OnInit {
   currentUser: AuthUser | null = null;
   surveysCompleted = 0;
   isLoading = true;
+  errorMessage = '';
 
   tiers: Tier[] = [
     {
@@ -73,12 +74,16 @@ export class ProfileComponent implements OnInit {
       this.router.navigate(['/login']);
       return;
     }
-    this.apiService.getSurveys().subscribe({
+
+    this.apiService.getResponsesByUser().subscribe({
       next: (res: any) => {
-        this.surveysCompleted = res.surveys?.length || 0;
+        this.surveysCompleted = res.responses_count || 0;
         this.isLoading = false;
       },
       error: (err) => {
+        this.errorMessage =
+          err.error?.msg ||
+          'Failed to fetch responses count, please try again later';
         this.isLoading = false;
       },
     });

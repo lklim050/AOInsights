@@ -58,6 +58,26 @@ export interface SurveyInsights {
   createdAt: string;
 }
 
+export interface ResponsesByUser {
+  status: string;
+  msg: string;
+  responses_count: number;
+}
+
+export interface AdminSurvey {
+  id: number;
+  title: string;
+  points_reward: number;
+  is_published: boolean;
+  created_by: string;
+  creator: {
+    uuid: string;
+    name: string;
+    email: string;
+    role: string;
+  };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -159,5 +179,18 @@ export class ApiService {
       `${this.baseUrl}/surveys/${surveyId}/insights`,
       {},
     );
+  }
+  getResponsesByUser(): Observable<ResponsesByUser> {
+    return this.http.get<ResponsesByUser>(`${this.baseUrl}/responses`);
+  }
+
+  getAdminSurveys(): Observable<AdminSurvey> {
+    return this.http.get<AdminSurvey>(`${this.baseUrl}/surveys/admin`);
+  }
+
+  adminTogglePublish(surveyId: number, isPublished: boolean): Observable<any> {
+    return this.http.patch(`${this.baseUrl}/surveys/${surveyId}/toggle`, {
+      is_published: isPublished,
+    });
   }
 }

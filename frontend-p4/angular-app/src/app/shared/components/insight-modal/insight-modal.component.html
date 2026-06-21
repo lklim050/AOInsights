@@ -1,20 +1,26 @@
 <div class="modal-backdrop" *ngIf="isVisible" (click)="onClose()">
   <div class="modal-box" (click)="$event.stopPropagation()">
+    <!-- Header -->
     <div class="modal-header">
       <div class="modal-title-row">
         <span class="modal-icon">🤖</span>
-        <h2>AI Survey Insights ({{ aiModel }})</h2>
+        <h2>
+          AI Survey Insights
+          <span *ngIf="aiModel" class="ai-model-tag"> ({{ aiModel }}) </span>
+        </h2>
       </div>
-      <button clas="btn-close" (click)="onClose()">X</button>
     </div>
 
+    <!-- Loading State -->
     <div *ngIf="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
-      <p>Generating insights</p>
+      <p>Generating insights...</p>
       <p class="loading-sub">AI is analysing your survey responses</p>
     </div>
 
+    <!-- Content -->
     <div *ngIf="!isLoading" class="modal-content">
+      <!-- Meta Row -->
       <div class="insight-meta">
         <span class="meta-item">
           📊 Based on {{ submissionCount }} submissions
@@ -22,13 +28,72 @@
         <span class="meta-item" *ngIf="generatedAt">
           🕐 {{ generatedAt | date: "dd MMM yyyy, HH:mm" }}
         </span>
-        <span class="meta-item"> Note: {{ insightMsg }} </span>
+        <span class="meta-item" *ngIf="insightMsg"> 📝 {{ insightMsg }} </span>
       </div>
 
-      <div class="summary-body">
+      <!-- View Mode Toggle -->
+      <div class="view-toggle">
+        <button
+          class="toggle-btn"
+          [class.active]="viewMode === 'cards'"
+          (click)="setViewMode('cards')"
+        >
+          🎴 Structured View
+        </button>
+        <button
+          class="toggle-btn"
+          [class.active]="viewMode === 'full'"
+          (click)="setViewMode('full')"
+        >
+          📄 Full Report
+        </button>
+      </div>
+
+      <!-- Cards View — structured color-coded cards -->
+      <div class="sections-body" *ngIf="viewMode === 'cards'">
+        <div
+          *ngFor="let section of sections; let i = index"
+          class="insight-section"
+        >
+          <!-- Section Title (no longer collapsible) -->
+          <div class="section-header-static">
+            <h4>{{ section.title }}</h4>
+          </div>
+
+          <!-- Section Items — always visible -->
+          <div class="section-items">
+            <div
+              *ngFor="let item of section.items"
+              class="insight-item"
+              [class.critical]="item.type === 'critical'"
+              [class.positive]="item.type === 'positive'"
+              [class.neutral]="item.type === 'neutral'"
+              [class.high]="item.type === 'high'"
+              [class.medium]="item.type === 'medium'"
+              [class.low]="item.type === 'low'"
+              [class.recommendation]="item.type === 'recommendation'"
+            >
+              <!-- Label Row with Badge -->
+              <div class="item-header" *ngIf="item.label">
+                <span class="item-label">{{ item.label }}</span>
+                <span class="item-type-badge" *ngIf="getTypeBadge(item.type)">
+                  {{ getTypeBadge(item.type) }}
+                </span>
+              </div>
+
+              <p class="item-content">{{ item.content }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Full Report View — raw markdown -->
+      <div class="full-report" *ngIf="viewMode === 'full'">
         <markdown [data]="summary" class="markdown-content"></markdown>
       </div>
     </div>
+
+    <!-- Footer -->
     <div class="modal-footer" *ngIf="!isLoading">
       <button class="btn-close-footer" (click)="onClose()">Close</button>
     </div>

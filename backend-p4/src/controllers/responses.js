@@ -17,6 +17,33 @@ export const hostVerification = async (surveyId, hostId) => {
   return { success: true, survey };
 };
 
+export const getSurveyResponseByUser = async (req, res) => {
+  try {
+    const userId = req.decoded?.id || req.decoded?.uuid;
+    if (!userId) {
+      return res.status(401).json({ status: "error", msg: "User not found" });
+    }
+
+    const responses = await prisma.surveyResponse.findMany({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    res.status(201).json({
+      status: "ok",
+      msg: "Responses fetched successfully",
+      responses_count: responses.length,
+      responses: responses,
+    });
+  } catch (error) {
+    console.error("❌ getSurveyResponse error:", error);
+    return res
+      .status(500)
+      .json({ status: "error", msg: "failed to fetch responses" });
+  }
+};
+
 export const postSurveyResponse = async (req, res) => {
   try {
     const surveyId = Number(req.params.surveyId);
@@ -227,6 +254,15 @@ export const getSurveyInsights = async (req, res) => {
     const aiModel = "gemini-3.1-flash-lite";
     const getInsight = !existingInsight || totalSubmissions > lastCount + 5;
 
+    if (totalSubmissions < 5)
+      return res.status(200).json({
+        status: "ok",
+        msg: `Will Not Generate Insight as responses is less than 5 (Received: ${totalSubmissions})`,
+        aiModel: "Looking for AI...",
+        insights: existingInsight || [],
+        last_created_at: "",
+      });
+
     if (!getInsight)
       return res.status(200).json({
         status: "ok",
@@ -238,11 +274,39 @@ export const getSurveyInsights = async (req, res) => {
 
     // AI Generation starts here if no existing insights
     const prompt = `
-      You are a data analyst. Below are survey results in JSON format. 
-      Analyze the trends, summarize text feedback, and provide 3 actionable 
-      recommendations for the host. 
-      JSON: ${JSON.stringify(resultsSummary)}
-    `;
+You are a data analyst. Analyze the survey results in the JSON below.
+
+Return your analysis in this markdown format:
+
+### 1. Trends Analysis
+* **[Trend Label]:** [Your analysis]. **(SENTIMENT)**
+(Add 2-4 bullets based on what the data actually shows)
+
+### 2. Summary of Text Feedback
+* **[Feedback Label]:** [Your summary]. **(SENTIMENT)**
+(Add 2-4 bullets based on what the data actually shows)
+
+### 3. Actionable Recommendations
+* **[Recommendation Label]:** [Your recommendation]. **(PRIORITY)**
+(Add exactly 3 bullets)
+
+KEYWORD RULES:
+- Replace (SENTIMENT) with POSITIVE, NEGATIVE, or NEUTRAL based on the ACTUAL data
+- Replace (PRIORITY) with HIGH, MEDIUM, or LOW for recommendations
+- Be honest: if the data is neutral or inconclusive, mark it NEUTRAL
+- Do NOT force a mix of sentiments — if all feedback is neutral, mark everything NEUTRAL
+- If there is limited or test data, NEUTRAL is the appropriate sentiment
+
+FORMAT RULES:
+- Every bullet MUST end with **(KEYWORD)**
+- Use ONLY: POSITIVE, NEGATIVE, NEUTRAL for sentiment
+- Use ONLY: HIGH, MEDIUM, LOW for priority
+- Do NOT use markdown tables
+- Do NOT put the keyword inside the label
+- Use the exact section headers shown (### with number and title)
+
+JSON: ${JSON.stringify(resultsSummary)}
+`;
 
     const result = await ai.models.generateContent({
       model: aiModel, // Alternative to try

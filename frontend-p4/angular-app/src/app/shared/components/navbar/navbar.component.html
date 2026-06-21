@@ -4,47 +4,87 @@
     <a routerLink="/" class="nav-logo"> 🏆 AskYouSomethingHa </a>
 
     <!-- Right Side -->
-    <div class="nav-right" *ngIf="currentUser; else guestNav">
-      <!-- ↑ *ngIf with else — shows logged-in nav OR guest nav -->
-
-      <!-- Points Badge -->
-      <div class="nav-points">⭐ {{ currentUser.points_bal ?? 0 }} pts</div>
-
-      <!-- User Info -->
-      <div class="nav-user">
-        <span class="nav-role" [class.host]="currentUser.role === 'HOST'">
-          {{ currentUser.role }}
-        </span>
-        <span class="nav-email">{{ currentUser.email }}</span>
+    <div class="nav-right">
+      <!-- Points Badge — always visible when logged in -->
+      <div class="nav-points" *ngIf="currentUser">
+        ⭐ {{ currentUser.points_bal ?? 0 }} pts
       </div>
 
-      <!-- Host Dashboard Link -->
+      <!-- Avatar + Dropdown -->
+      <div class="nav-avatar-wrapper" *ngIf="currentUser">
+        <!-- Avatar Button -->
+        <button class="nav-avatar" (click)="toggleDropdown()">
+          {{ getInitial() }}
+        </button>
+        <!-- ↑ Clicking avatar toggles dropdown -->
 
-      <a
-        *ngIf="currentUser.role === 'HOST' || currentUser.role === 'ADMIN'"
-        routerLink="/host"
-        class="nav-link"
-      >
-        Dashboard
-      </a>
+        <!-- Dropdown Menu -->
+        <div class="nav-dropdown" *ngIf="isDropdownOpen">
+          <!-- User Info Header -->
+          <div class="dropdown-header">
+            <div class="dropdown-avatar">{{ getInitial() }}</div>
+            <div class="dropdown-user-info">
+              <span class="dropdown-name">
+                {{ currentUser.name || currentUser.email }}
+              </span>
+              <span class="dropdown-email" *ngIf="currentUser.name">
+                {{ currentUser.email }}
+              </span>
+              <span
+                class="dropdown-role"
+                [class.host]="currentUser.role === 'HOST'"
+                [class.admin]="currentUser.role === 'ADMIN'"
+              >
+                {{ currentUser.role }}
+              </span>
+            </div>
+          </div>
 
-      <a
-        *ngIf="currentUser.role === 'USER' || currentUser.role === 'ADMIN'"
-        routerLink="/user/profile"
-        class="nav-link"
-        >My Profile</a
-      >
+          <div class="dropdown-divider"></div>
 
-      <!-- Logout -->
-      <button class="btn-logout" (click)="logout()">Sign Out</button>
-    </div>
+          <!-- Menu Items -->
+          <a
+            *ngIf="currentUser.role === 'ADMIN'"
+            routerLink="/admin"
+            class="dropdown-item"
+            click="closeDropdown()"
+          >
+            🛡️ Admin Dashboard</a
+          >
+          <a
+            routerLink="/user/profile"
+            class="dropdown-item"
+            (click)="closeDropdown()"
+          >
+            👤 My Profile
+          </a>
 
-    <!-- Guest Nav (not logged in) -->
-    <ng-template #guestNav>
-      <div class="nav-right">
+          <a
+            *ngIf="currentUser.role === 'HOST' || currentUser.role === 'ADMIN'"
+            routerLink="/host"
+            class="dropdown-item"
+            (click)="closeDropdown()"
+          >
+            📋 Host Dashboard
+          </a>
+
+          <a routerLink="/" class="dropdown-item" (click)="closeDropdown()">
+            🏠 Browse Surveys
+          </a>
+
+          <div class="dropdown-divider"></div>
+
+          <button class="dropdown-item danger" (click)="logout()">
+            🚪 Sign Out
+          </button>
+        </div>
+      </div>
+
+      <!-- Guest Nav -->
+      <div class="nav-right" *ngIf="!currentUser">
         <a routerLink="/login" class="nav-link">Sign In</a>
         <a routerLink="/register" class="btn-register">Register</a>
       </div>
-    </ng-template>
+    </div>
   </div>
 </nav>

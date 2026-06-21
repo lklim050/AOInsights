@@ -15,6 +15,7 @@ import {
   SurveyResponse,
 } from '../../services/api.service';
 import { AuthService } from '../../core/services/auth.service';
+import { Tier } from '../profile/profile.component';
 
 @Component({
   selector: 'app-survey-detail',
@@ -35,6 +36,41 @@ export class SurveyDetailComponent implements OnInit {
   submitted = false;
   previousResponse: SurveyResponse | null = null;
   showPreviousResponse = false;
+  tiers: Tier[] = [
+    {
+      name: 'Bronze',
+      label: '🥉 Bronze',
+      minPoints: 0,
+      maxPoints: 100,
+      color: '#92400e',
+      bgColor: '#fef3c7',
+    },
+    {
+      name: 'Silver',
+      label: '🥈 Silver',
+      minPoints: 100,
+      maxPoints: 300,
+      color: '#374151',
+      bgColor: '#f3f4f6',
+    },
+    {
+      name: 'Gold',
+      label: '🥇 Gold',
+      minPoints: 300,
+      maxPoints: 700,
+      color: '#92400e',
+      bgColor: '#fef9c3',
+    },
+    {
+      name: 'Platinum',
+      label: '💎 Platinum',
+      minPoints: 700,
+      maxPoints: Infinity,
+      // ↑ Infinity means no upper limit — once platinum, always platinum
+      color: '#1e40af',
+      bgColor: '#dbeafe',
+    },
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -146,6 +182,38 @@ export class SurveyDetailComponent implements OnInit {
       this.authService.setUser(updated);
     }
   }
+
+  get currentTier(): Tier {
+    return (
+      [...this.tiers]
+        .reverse()
+        .find((tier) => this.newBalance >= tier.minPoints) || this.tiers[0]
+    );
+  }
+
+  // next tier user can go
+  get nextTier(): Tier | null {
+    const currentIndex = this.tiers.findIndex(
+      (tier) => tier.name === this.currentTier.name,
+    );
+    return currentIndex < this.tiers.length - 1
+      ? this.tiers[currentIndex + 1]
+      : null;
+  }
+
+  get progressToNextTier(): number {
+    if (!this.nextTier) return 100;
+
+    const pointsIntoCurrentTier = this.newBalance - this.currentTier.minPoints;
+    const tierRange = this.nextTier.minPoints - this.currentTier.minPoints;
+    return Math.round((pointsIntoCurrentTier / tierRange) * 100);
+  }
+
+  get pointsToNextTier(): number {
+    if (!this.nextTier) return 0;
+    return this.nextTier.minPoints - this.newBalance;
+  }
+
   goHome() {
     this.router.navigate(['/']);
   }

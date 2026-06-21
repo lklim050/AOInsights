@@ -5,10 +5,11 @@ import {
   getSurveyById,
   readAllSurveys,
   readPublishedSurveys,
-  readTestSurveys,
+  readSurveysAdmin,
+  toggleSurveyPublishAdmin,
   updateSurvey,
 } from "../controllers/surveys.js";
-import { auth, authHost } from "../middlewares/users.js";
+import { auth, authAdmin, authHost } from "../middlewares/users.js";
 import {
   getSurveyInsights,
   getSurveyResults,
@@ -16,7 +17,7 @@ import {
 
 const router = express.Router();
 
-router.get("/test", readTestSurveys);
+router.get("/admin", authAdmin, readSurveysAdmin);
 router.get("/", auth, readAllSurveys);
 router.get("/public", auth, readPublishedSurveys);
 router.put("/", authHost, createSurvey);
@@ -25,5 +26,6 @@ router.delete("/:surveyId", authHost, deleteSurvey);
 router.post("/:surveyId", auth, getSurveyById);
 router.get("/:surveyId/results", authHost, getSurveyResults);
 router.post("/:surveyId/insights", authHost, getSurveyInsights);
+router.patch("/:surveyId/toggle", authAdmin, toggleSurveyPublishAdmin);
 
 export default router;

@@ -1,17 +1,41 @@
-// import prisma from "../db/prisma.js";
+import prisma from "../db/prisma.js";
 
-export const readTestSurveys = async (req, res) => {
+export const readSurveysAdmin = async (req, res) => {
   try {
-    const surveys = await prisma.survey.findMany();
-    return res.status(200).json(surveys);
+    const userId = req.decoded?.id || req.decoded?.uuid;
+    const userRole = req.decoded?.role;
+
+    const user = await prisma.user.findUnique({
+      where: { uuid: userId },
+    });
+    if (!user || userRole !== "ADMIN")
+      return res
+        .status(404)
+        .json({ status: "error", msg: "user is not an admin", role: userRole });
+
+    const surveys = await prisma.survey.findMany({
+      include: {
+        creator: {
+          select: { uuid: true, name: true, email: true, role: true },
+        },
+      },
+      orderBy: { id: "asc" },
+    });
+
+    // const surveys = await prisma.survey.findMany();
+
+    return res.status(200).json({
+      status: "ok",
+      msg: "all surveys fetched successfully",
+      surveys: surveys,
+    });
   } catch (error) {
+    console.error(error.message);
     return res
       .status(500)
-      .json({ error: "Failed to retrieve surveys", details: error.message });
+      .json({ status: "error", msg: "Failed to retrieve surveys" });
   }
 };
-
-import prisma from "../db/prisma.js";
 
 export const createSurvey = async (req, res) => {
   try {
@@ -151,6 +175,48 @@ export const getSurveyById = async (req, res) => {
   } catch (error) {
     console.error(error.message);
     return res.status(500).json({ status: "error", msg: "fail to find" });
+  }
+};
+
+export const toggleSurveyPublishAdmin = async (req, res) => {
+  try {
+    const { is_published } = req.body;
+    const userId = req.decoded?.id || req.decoded?.uuid;
+    const userRole = req.decoded?.role;
+    const surveyId = Number(req.params.surveyId);
+
+    const user = await prisma.user.findUnique({
+      where: { uuid: userId },
+    });
+    if (!user || userRole !== "ADMIN")
+      return res
+        .status(404)
+        .json({ status: "error", msg: "user is not an admin", role: userRole });
+
+    const survey = await prisma.survey.findUnique({
+      where: { id: surveyId },
+    });
+    if (!survey)
+      return res.status(404).json({ status: "error", msg: "survey not found" });
+
+    const toggle = await prisma.survey.update({
+      where: { id: surveyId },
+      data: { is_published: is_published },
+    });
+
+    res.json({
+      status: "ok",
+      msg: "success",
+      input: is_published,
+      role: userRole,
+      before: survey.is_published,
+      after: toggle.is_published,
+    });
+  } catch (error) {
+    console.error(error.message);
+    return res
+      .status(500)
+      .json({ status: "error", msg: "failed to toggle publish" });
   }
 };
 

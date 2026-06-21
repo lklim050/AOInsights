@@ -10,6 +10,8 @@ import { DashboardComponent } from './features/host/dashboard/dashboard.componen
 import { ManageQuestionsComponent } from './features/host/manage-questions/manage-questions.component';
 import { ResultsComponent } from './features/host/results/results.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import { DashboardAdminComponent } from './features/admin/dashboard-admin/dashboard-admin.component';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -44,6 +46,11 @@ export const routes: Routes = [
     path: 'user/profile',
     component: ProfileComponent,
     canActivate: [authGuard],
+  },
+  {
+    path: 'admin',
+    component: DashboardAdminComponent,
+    canActivate: [adminGuard],
   },
   { path: '**', redirectTo: '' },
 ];
