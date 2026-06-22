@@ -61,13 +61,18 @@ export class DashboardAdminComponent implements OnInit {
     let result = [...this.surveys];
 
     if (this.searchTerm.trim()) {
-      const term = this.searchTerm.toLowerCase();
-      result = result.filter(
-        (search) =>
-          search.title.toLowerCase().includes(term) ||
-          search.creator.name.toLowerCase().includes(term) ||
-          search.creator.email.toLowerCase().includes(term),
-      );
+      const term = this.searchTerm.trim();
+      const isNumber = !isNaN(Number(term));
+      result = result.filter((search) => {
+        if (isNumber) {
+          return search.id === Number(term);
+        }
+        return (
+          search.title.toLowerCase().includes(term.toLowerCase()) ||
+          search.creator.name.toLowerCase().includes(term.toLowerCase()) ||
+          search.creator.email.toLowerCase().includes(term.toLowerCase())
+        );
+      });
     }
     if (this.filterStatus === 'published') {
       result = result.filter((search) => search.is_published);
@@ -86,10 +91,10 @@ export class DashboardAdminComponent implements OnInit {
     this.modalService
       .confirm({
         title: 'Unlock Survey...',
-        message: `Unlock "${survey.title}" (id: ${survey.id})'s published state?`,
+        message: `Unlock "id ${survey.id}: ${survey.title}" back to draft state? DANGER: if there are existing responses, they will be deleted. Please re-confirm with survey's owner`,
         confirmLabel: 'Yes, Unlock',
         cancelLabel: 'Cancel',
-        danger: false,
+        danger: true,
       })
       .subscribe((confirmed) => {
         if (!confirmed) return;
@@ -104,6 +109,7 @@ export class DashboardAdminComponent implements OnInit {
           error: (err) => {
             this.errorMessage = err.error?.msg || 'Failed to unlock survey';
             this.togglingId = null;
+            setTimeout(() => (this.errorMessage = ''), 4000);
           },
         });
       });

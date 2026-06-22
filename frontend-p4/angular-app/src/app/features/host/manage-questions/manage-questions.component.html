@@ -4,6 +4,7 @@
     <div>
       <button class="back-link" (click)="goBack()">← Back to Dashboard</button>
       <h1>Manage Questions</h1>
+      <!-- <p class="subtitle">Survey ID: {{ survey.title }}</p> -->
       <p class="subtitle">Survey ID: {{ surveyId }}</p>
     </div>
     <button class="btn-primary" (click)="toggleAddForm()" *ngIf="!isAdding">

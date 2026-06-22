@@ -3,7 +3,7 @@
 
   <div *ngIf="!isLoading && currentUser">
     <div class="profile-header">
-      <div class="avatar">
+      <div class="avatar" [style.background]="getAvatarColor(currentUser.name)">
         {{ currentUser.name[0].toUpperCase() }}
       </div>
       <div class="user-name">
@@ -100,7 +100,7 @@
 
     <!-- Quick Actions -->
     <div class="actions-row">
-      <a routerLink="/" class="btn-primary"> Browse Surveys </a>
+      <a routerLink="/home" class="btn-primary"> Browse Surveys </a>
 
       <!-- <a
       *ngIf="currentUser.role === 'HOST'"

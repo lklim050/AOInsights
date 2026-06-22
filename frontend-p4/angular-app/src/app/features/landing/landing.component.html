@@ -1,0 +1,300 @@
+<div
+  class="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300"
+>
+  <!-- ─── NAVBAR ──────────────────────────────────── -->
+  <nav
+    class="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-gray-900/90 backdrop-blur-sm border-b border-gray-100 dark:border-gray-800"
+  >
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <!-- Logo -->
+      <a routerLink="/" class="flex items-center">
+        <app-logo width="160" height="42"></app-logo>
+      </a>
+
+      <!-- Nav Links -->
+      <div class="flex items-center gap-6">
+        <a
+          href="#how-it-works"
+          class="text-sm text-gray-500 dark:text-gray-400 hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
+        >
+          How it works
+        </a>
+        <a
+          href="#features"
+          class="text-sm text-gray-500 dark:text-gray-400 hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
+        >
+          Features
+        </a>
+        <a
+          href="#tiers"
+          class="text-sm text-gray-500 dark:text-gray-400 hover:text-teal-500 dark:hover:text-teal-400 transition-colors"
+        >
+          Rewards
+        </a>
+        <a
+          routerLink="/login"
+          class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors"
+        >
+          Sign In
+        </a>
+        <a
+          routerLink="/register"
+          class="text-sm font-medium text-white px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 hover:opacity-90 transition-opacity"
+        >
+          Get Started
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ─── HERO ─────────────────────────────────────── -->
+  <section
+    class="pt-32 pb-24 px-6 bg-gradient-to-br from-slate-50 via-cyan-50 to-teal-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900"
+  >
+    <div class="max-w-4xl mx-auto text-center">
+      <!-- Eyebrow -->
+      <div
+        class="inline-flex items-center gap-2 bg-cyan-100 dark:bg-cyan-900/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-700 text-xs font-semibold px-4 py-2 rounded-full mb-8"
+      >
+        <span>🇸🇬</span>
+        <span>Singapore's Community Survey Platform</span>
+      </div>
+
+      <!-- Wordmark -->
+      <h1 class="text-6xl md:text-7xl font-extrabold tracking-tight mb-4">
+        <span
+          class="bg-gradient-to-r from-cyan-400 via-teal-400 to-green-400 bg-clip-text text-transparent"
+        >
+          AOInsights
+        </span>
+      </h1>
+
+      <!-- Tagline -->
+      <p
+        class="text-xl md:text-2xl font-light mb-4 text-gray-600 dark:text-gray-300"
+      >
+        your
+        <span class="font-semibold text-cyan-600 dark:text-cyan-400">
+          Automated Opinions
+        </span>
+        <span class="text-gray-400 dark:text-gray-500"> into </span>
+        <span class="font-semibold text-teal-600 dark:text-teal-400">
+          Insights
+        </span>
+      </p>
+
+      <!-- Sub tagline -->
+      <p
+        class="text-base mb-10 max-w-xl mx-auto text-gray-400 dark:text-gray-500"
+      >
+        Complete community surveys, earn points, climb tiers — while hosts get
+        AI-powered analytics on every response.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          (click)="goToApp()"
+          class="px-8 py-4 text-white font-semibold rounded-xl text-base bg-gradient-to-r from-cyan-500 to-teal-500 hover:opacity-90 transition-all hover:scale-105"
+        >
+          {{ isLoggedIn ? "Go to Dashboard →" : "Start Earning Points →" }}
+        </button>
+        <a
+          routerLink="/login"
+          class="px-8 py-4 font-semibold rounded-xl text-base border-2 border-teal-200 dark:border-teal-700 text-teal-600 dark:text-teal-400 bg-white dark:bg-gray-800 hover:border-teal-400 dark:hover:border-teal-500 transition-all hover:scale-105"
+        >
+          Sign In
+        </a>
+      </div>
+
+      <!-- Social proof -->
+      <p class="mt-8 text-xs text-gray-400 dark:text-gray-600">
+        Free to join · No credit card required · Earn points from day one
+      </p>
+    </div>
+  </section>
+
+  <!-- ─── HOW IT WORKS ─────────────────────────────── -->
+  <section id="how-it-works" class="py-24 px-6 bg-white dark:bg-gray-900">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-3 text-gray-800 dark:text-gray-100">
+          How it works
+        </h2>
+        <p class="text-base text-gray-400 dark:text-gray-500">
+          Three simple steps to start earning
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div
+          *ngFor="let step of steps"
+          class="relative p-8 rounded-2xl transition-all group border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800/50 hover:border-teal-200 dark:hover:border-teal-700 hover:shadow-lg dark:hover:shadow-teal-900/20"
+        >
+          <!-- Background step number -->
+          <span
+            class="absolute top-6 right-6 text-5xl font-black transition-colors text-gray-50 dark:text-gray-700 group-hover:text-teal-50 dark:group-hover:text-teal-900/50"
+          >
+            {{ step.number }}
+          </span>
+
+          <div class="text-4xl mb-4">{{ step.icon }}</div>
+
+          <h3 class="text-lg font-bold mb-2 text-gray-800 dark:text-gray-100">
+            {{ step.title }}
+          </h3>
+
+          <p class="text-sm leading-relaxed text-gray-400 dark:text-gray-500">
+            {{ step.desc }}
+          </p>
+
+          <!-- Animated underline -->
+          <div
+            class="mt-6 h-1 w-12 rounded-full transition-all duration-500 bg-gradient-to-r from-cyan-400 to-teal-400 group-hover:w-full"
+          ></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FEATURES ─────────────────────────────────── -->
+  <section
+    id="features"
+    class="py-24 px-6 bg-gradient-to-br from-slate-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900"
+  >
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-3 text-gray-800 dark:text-white">
+          Everything you need
+        </h2>
+        <p class="text-base text-gray-400 dark:text-gray-500">
+          Built for both survey takers and hosts
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div
+          *ngFor="let feature of features"
+          class="p-6 rounded-2xl transition-all bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-teal-200 dark:hover:border-teal-600 hover:shadow-md dark:hover:shadow-teal-900/20"
+        >
+          <div class="text-3xl mb-4">{{ feature.icon }}</div>
+
+          <h3 class="text-base font-bold mb-2 text-gray-800 dark:text-gray-100">
+            {{ feature.title }}
+          </h3>
+
+          <p class="text-sm leading-relaxed text-gray-400 dark:text-gray-500">
+            {{ feature.desc }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── TIER REWARDS ─────────────────────────────── -->
+  <section id="tiers" class="py-24 px-6 bg-white dark:bg-gray-900">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl font-bold mb-3 text-gray-800 dark:text-white">
+          Earn your way up
+        </h2>
+        <p class="text-base text-gray-400 dark:text-gray-500">
+          Complete surveys to unlock higher tiers and exclusive perks
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div
+          *ngFor="let tier of tiers"
+          class="rounded-2xl border-2 p-6 text-center transition-all hover:scale-105"
+          [ngClass]="tier.bgColor + ' ' + tier.borderColor"
+        >
+          <div class="text-5xl mb-3">{{ tier.icon }}</div>
+
+          <h3 class="text-xl font-bold mb-1" [ngClass]="tier.textColor">
+            {{ tier.name }}
+          </h3>
+
+          <p
+            class="text-xs font-semibold text-gray-400 dark:text-gray-500 mb-4 bg-white/60 dark:bg-gray-900/40 rounded-full px-3 py-1 inline-block"
+          >
+            {{ tier.points }}
+          </p>
+
+          <ul class="text-left space-y-2">
+            <li
+              *ngFor="let perk of tier.perks"
+              class="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2"
+            >
+              <span class="text-teal-500 font-bold">✓</span>
+              {{ perk }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FINAL CTA ─────────────────────────────────── -->
+  <section
+    class="py-24 px-6 bg-gradient-to-r from-cyan-500 via-teal-500 to-green-500 dark:from-cyan-700 dark:via-teal-700 dark:to-green-700"
+  >
+    <div class="max-w-2xl mx-auto text-center">
+      <h2 class="text-4xl font-extrabold text-white mb-4">
+        Ready to share your opinions?
+      </h2>
+      <p class="text-base mb-10 text-cyan-100 dark:text-cyan-200">
+        Join AOInsights today — it's free, it's rewarding, and your voice
+        matters.
+      </p>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <button
+          (click)="goToApp()"
+          class="px-8 py-4 font-bold rounded-xl text-base text-teal-600 dark:text-teal-700 bg-white dark:bg-gray-100 hover:bg-gray-50 transition-all hover:scale-105"
+        >
+          {{ isLoggedIn ? "Go to Dashboard →" : "Join AOInsights →" }}
+        </button>
+        <a
+          routerLink="/login"
+          *ngIf="!isLoggedIn"
+          class="px-8 py-4 font-semibold rounded-xl text-base text-white border-2 border-white/50 dark:border-white/30 hover:border-white dark:hover:border-white/60 transition-all hover:scale-105"
+        >
+          Already have an account?
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── FOOTER ────────────────────────────────────── -->
+  <footer class="py-8 px-6 bg-gray-900 dark:bg-gray-950">
+    <div
+      class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4"
+    >
+      <span
+        class="text-lg font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent"
+      >
+        AOInsights
+      </span>
+
+      <p class="text-xs text-gray-500 dark:text-gray-600">
+        © 2026 AOInsights · Automated Opinion Insight · Built in Singapore 🇸🇬
+      </p>
+
+      <div class="flex gap-6">
+        <a
+          routerLink="/login"
+          class="text-xs text-gray-500 dark:text-gray-600 hover:text-teal-400 transition-colors"
+        >
+          Sign In
+        </a>
+        <a
+          routerLink="/register"
+          class="text-xs text-gray-500 dark:text-gray-600 hover:text-teal-400 transition-colors"
+        >
+          Register
+        </a>
+      </div>
+    </div>
+  </footer>
+</div>

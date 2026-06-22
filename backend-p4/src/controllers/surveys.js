@@ -199,18 +199,43 @@ export const toggleSurveyPublishAdmin = async (req, res) => {
     if (!survey)
       return res.status(404).json({ status: "error", msg: "survey not found" });
 
-    const toggle = await prisma.survey.update({
-      where: { id: surveyId },
-      data: { is_published: is_published },
-    });
+    if (is_published === false) {
+      await prisma.$transaction([
+        // 1. Delete all responses for this survey
+        prisma.surveyResponse.deleteMany({
+          where: { survey_id: surveyId },
+        }),
+        // 2. Delete the associated AI insight
+        prisma.surveyInsight.deleteMany({
+          where: { survey_id: surveyId },
+        }),
+        // 3. Update the survey state
+        prisma.survey.update({
+          where: { id: surveyId },
+          data: { is_published: false },
+        }),
+      ]);
+    } else if (is_published === true) {
+      // Just update the status if setting to true
+      await prisma.survey.update({
+        where: { id: surveyId },
+        data: { is_published: true },
+      });
+    } else {
+      console.error(
+        "failed to toggle publish, is_published is neither true or false",
+      );
+      return res.status(500).json({
+        status: "error",
+        msg: "failed to toggle publish, is_published is neither true or false",
+      });
+    }
 
     res.json({
       status: "ok",
       msg: "success",
       input: is_published,
       role: userRole,
-      before: survey.is_published,
-      after: toggle.is_published,
     });
   } catch (error) {
     console.error(error.message);

@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #22d3ee 0%, #4ade80 100%);
 }
 
 .auth-card {
@@ -21,9 +21,14 @@
 }
 
 .auth-header h1 {
-  font-size: 1.8rem;
+  font-size: 3.2rem;
   margin-bottom: 4px;
-  color: #1a1a2e;
+  background: linear-gradient(to right, #22d3ee, #14b8a6, #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  font-weight: 700;
 }
 
 .auth-header p {
@@ -79,7 +84,7 @@ input.invalid {
 .btn-primary {
   width: 100%;
   padding: 13px;
-  background: #667eea;
+  background: #10b981;
   color: white;
   border: none;
   border-radius: 8px;

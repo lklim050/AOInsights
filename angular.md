@@ -102,3 +102,34 @@ Summary of key changes made when converting the original React/Vite `package.jso
 - **Architecture implications**:
   - Routing, state, and data fetching move from React idioms (React Router, hooks, react-query) to Angular idioms (Angular Router, services + RxJS, Angular DI, optionally NgRx).
   - Tooling and config (build, linting, TypeScript setup, environment files) are now managed by Angular CLI and Angular ESLint schematics.
+
+## 8) Tailwind CSS for Angular 17
+
+To set up Tailwind CSS in your Angular 17 project, follow these steps:
+
+1. Install Tailwind CSS and its dependencies:
+
+```bash
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init
+```
+
+2. Configure Tailwind to remove unused styles in production by editing `tailwind.config.js`:
+
+```javascript
+module.exports = {
+  content: ["./src/**/*.{html,ts}"],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+```
+
+3. Add Tailwind directives to your global styles file (e.g., `src/styles.css`):
+
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```

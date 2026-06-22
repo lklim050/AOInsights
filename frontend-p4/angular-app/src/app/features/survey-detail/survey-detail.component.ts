@@ -215,6 +215,6 @@ export class SurveyDetailComponent implements OnInit {
   }
 
   goHome() {
-    this.router.navigate(['/']);
+    this.router.navigate(['/home']);
   }
 }

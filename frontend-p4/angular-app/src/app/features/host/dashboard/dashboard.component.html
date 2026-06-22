@@ -6,6 +6,11 @@
       <p class="subtitle">
         Hi {{ currentUser?.name }}, You can manage your surveys here:
       </p>
+      <p class="subtitle">
+        Disclaimers: Please inform ADMIN if you want to revert a published state
+        back to draft but do note that existing responses would be deleted to
+        maintain the database integrity.
+      </p>
     </div>
     <a routerLink="/host/create" class="btn-primary"> + Create Survey </a>
   </div>
@@ -31,7 +36,10 @@
     <div *ngFor="let survey of surveys" class="survey-row">
       <!-- Survey Info -->
       <div class="survey-info">
-        <h2>{{ survey.title }}</h2>
+        <h2>
+          {{ survey.title }} <span class="survey-id">#{{ survey.id }}</span>
+        </h2>
+
         <div class="survey-meta">
           <span class="points-badge">🏆 {{ survey.points_reward }} pts</span>
           <span
@@ -92,7 +100,7 @@
           Delete
         </button>
 
-        <span *ngIf="survey.is_published" class="published-lock">
+        <span *ngIf="survey.is_published" class="deleted-lock">
           🔒 Delete
         </span>
       </div>

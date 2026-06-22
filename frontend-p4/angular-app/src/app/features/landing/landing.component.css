@@ -1,0 +1,7 @@
+:host {
+  scroll-behavior: smooth;
+}
+
+:host-context(app-root) app-navbar {
+  display: none;
+}

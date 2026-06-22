@@ -60,10 +60,12 @@ export class LoginComponent {
     this.authService.login(email, password).subscribe({
       next: (user) => {
         // Redirect based on role after login
-        if (user.role === 'HOST' || user.role === 'ADMIN') {
+        if (user.role === 'HOST') {
           this.router.navigate(['/host']);
+        } else if (user.role === 'ADMIN') {
+          this.router.navigate(['/admin']);
         } else {
-          this.router.navigate(['/']);
+          this.router.navigate(['/home']);
         }
       },
       error: (err) => {

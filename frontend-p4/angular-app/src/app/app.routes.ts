@@ -12,11 +12,15 @@ import { ResultsComponent } from './features/host/results/results.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { DashboardAdminComponent } from './features/admin/dashboard-admin/dashboard-admin.component';
 import { adminGuard } from './core/guards/admin.guard';
+import { LandingComponent } from './features/landing/landing.component';
+import { TestComponent } from './shared/test/test.component';
 
 export const routes: Routes = [
+  { path: '', component: LandingComponent },
+  // { path: 'test', component: TestComponent },
+  { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { path: '', component: HomeComponent, canActivate: [authGuard] },
   {
     path: 'survey/:id',
     component: SurveyDetailComponent,

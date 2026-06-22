@@ -92,6 +92,10 @@ export class ManageQuestionsComponent implements OnInit {
     });
   }
 
+  // getSurveyTitle() {
+  //   this.apiService.getSurveys
+  // }
+
   loadQuestion() {
     this.isLoading = true;
     this.apiService.getQuestions(this.surveyId).subscribe({

@@ -1,7 +1,9 @@
 <nav class="navbar">
   <div class="nav-container">
     <!-- Logo -->
-    <a routerLink="/" class="nav-logo"> 🏆 AskYouSomethingHa </a>
+    <a routerLink="/" class="nav-logo-link">
+      <app-logo width="180" height="48"></app-logo>
+    </a>
 
     <!-- Right Side -->
     <div class="nav-right">
@@ -13,7 +15,11 @@
       <!-- Avatar + Dropdown -->
       <div class="nav-avatar-wrapper" *ngIf="currentUser">
         <!-- Avatar Button -->
-        <button class="nav-avatar" (click)="toggleDropdown()">
+        <button
+          class="nav-avatar"
+          (click)="toggleDropdown()"
+          [style.background]="getAvatarColor(currentUser.name)"
+        >
           {{ getInitial() }}
         </button>
         <!-- ↑ Clicking avatar toggles dropdown -->
@@ -22,7 +28,12 @@
         <div class="nav-dropdown" *ngIf="isDropdownOpen">
           <!-- User Info Header -->
           <div class="dropdown-header">
-            <div class="dropdown-avatar">{{ getInitial() }}</div>
+            <div
+              class="dropdown-avatar"
+              [style.background]="getAvatarColor(currentUser.name)"
+            >
+              {{ getInitial() }}
+            </div>
             <div class="dropdown-user-info">
               <span class="dropdown-name">
                 {{ currentUser.name || currentUser.email }}
@@ -68,7 +79,7 @@
             📋 Host Dashboard
           </a>
 
-          <a routerLink="/" class="dropdown-item" (click)="closeDropdown()">
+          <a routerLink="/home" class="dropdown-item" (click)="closeDropdown()">
             🏠 Browse Surveys
           </a>
 

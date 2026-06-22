@@ -120,4 +120,28 @@ export class ProfileComponent implements OnInit {
     if (!this.nextTier) return 0;
     return this.nextTier.minPoints - this.points;
   }
+
+  getAvatarColor(name: string): string {
+    // Generate a consistent color based on the name string
+    const colors = [
+      '#22d3ee', // cyan
+      '#14b8a6', // teal
+      '#4ade80', // green
+      '#818cf8', // indigo
+      '#fb7185', // rose
+      '#fb923c', // orange
+      '#facc15', // yellow
+      '#a78bfa', // violet
+      '#34d399', // emerald
+      '#60a5fa', // blue
+    ];
+
+    // Convert name to a number by summing char codes
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash += name.charCodeAt(i);
+    }
+
+    return colors[hash % colors.length];
+  }
 }

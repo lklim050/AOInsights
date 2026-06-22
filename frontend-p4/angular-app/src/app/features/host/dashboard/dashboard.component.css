@@ -13,7 +13,7 @@
 }
 
 .dashboard-header h1 {
-  font-size: 1.8rem;
+  font-size: 2.4rem;
   color: #1a1a2e;
   margin-bottom: 4px;
 }
@@ -44,6 +44,15 @@
   font-size: 1rem;
   color: #1f2937;
   margin-bottom: 8px;
+}
+
+.survey-id {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .survey-meta {
@@ -86,7 +95,7 @@
 
 .btn-primary {
   padding: 10px 20px;
-  background: #4f46e5;
+  background: #10b981;
   color: white;
   border: none;
   border-radius: 8px;
@@ -98,7 +107,7 @@
 }
 
 .btn-primary:hover {
-  background: #4338ca;
+  background: #5a6fd6;
 }
 
 .btn-outline {
@@ -133,7 +142,7 @@
 
 .btn-toggle {
   padding: 8px 16px;
-  background: #4f46e5;
+  background: #10b981;
   color: white;
   border: none;
   border-radius: 8px;
@@ -142,14 +151,20 @@
   transition: all 0.2s;
 }
 
-.btn-toggle.unpublish {
-  background: #f59e0b;
-  /* ↑ Amber color for unpublish to signal caution */
+.btn-toggle:hover {
+  background: #5a6fd6;
 }
 
 .published-lock {
   padding: 8px 16px;
-  border: 1.5px solid #4f46e5;
+  border: 1.5px solid #4ade80;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.deleted-lock {
+  padding: 8px 16px;
+  border: 1.5px solid #f87171;
   border-radius: 8px;
   font-size: 0.85rem;
 }

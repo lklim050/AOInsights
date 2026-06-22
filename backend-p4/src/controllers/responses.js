@@ -97,7 +97,7 @@ export const submitSurveyResponse = async (req, res) => {
         .json({ status: "error", msg: "User not found or login" });
     }
 
-    // 1. Target Survey Checks
+    // Target Survey Checks
     const survey = await prisma.survey.findUnique({
       where: { id: Number(survey_id) },
     });
@@ -113,7 +113,7 @@ export const submitSurveyResponse = async (req, res) => {
       });
     }
 
-    // 2. Double Submission Guard Check
+    // Double Submission Guard Check
     const existingResponse = await prisma.surveyResponse.findUnique({
       where: {
         user_id_survey_id: {
@@ -130,9 +130,9 @@ export const submitSurveyResponse = async (req, res) => {
       });
     }
 
-    // 3. Database Transaction: Atomic write for the response row and points reward payout
+    // Create and update only previous checks pass
     const result = await prisma.$transaction(async (tx) => {
-      // Step A: Store the response payload structure
+      // Store the response payload structure
       const newResponse = await tx.surveyResponse.create({
         data: {
           user_id: userId,
@@ -142,7 +142,7 @@ export const submitSurveyResponse = async (req, res) => {
         },
       });
 
-      // Step B: Increment the commuter's points balance automatically
+      // Increment the commuter's points balance automatically
       const updatedUser = await tx.user.update({
         where: { uuid: userId },
         data: {
@@ -155,7 +155,6 @@ export const submitSurveyResponse = async (req, res) => {
       return { newResponse, newBalance: updatedUser.points_bal };
     });
 
-    // 4. Return successful response containing payout statements
     return res.status(201).json({
       status: "ok",
       msg: "Survey submitted successfully! Points credited.",

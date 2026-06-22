@@ -36,7 +36,7 @@ export const authHost = (req, res, next) => {
       const decoded = jwt.verify(token, process.env.ACCESS_SECRET);
 
       // 🍏 Adjusted: Match the strict uppercase "HOST" enum value from your schema
-      if (decoded.role === "HOST") {
+      if (decoded.role === "HOST" || decoded.role === "ADMIN") {
         req.decoded = decoded;
         next();
       } else {

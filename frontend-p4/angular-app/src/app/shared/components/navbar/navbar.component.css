@@ -51,7 +51,7 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  background: #4f46e5;
+  background: #4ade80;
   color: white;
   border: none;
   font-size: 1rem;
@@ -112,7 +112,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #4f46e5;
+  background: #4ade80;
   color: white;
   display: flex;
   align-items: center;
@@ -210,7 +210,7 @@
 
 /* Guest Nav */
 .nav-link {
-  color: #4f46e5;
+  color: #0891b2;
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 500;
@@ -218,7 +218,7 @@
 
 .btn-register {
   padding: 7px 16px;
-  background: #4f46e5;
+  background: linear-gradient(to right, #22d3ee, #14b8a6);
   color: white;
   border-radius: 8px;
   text-decoration: none;
@@ -228,5 +228,11 @@
 }
 
 .btn-register:hover {
-  background: #4338ca;
+  background: linear-gradient(to right, #22d3ee, #4338ca);
+}
+
+.nav-logo-link {
+  text-decoration: none;
+  display: flex;
+  align-items: center;
 }

@@ -1,1 +1,136 @@
-<p>dashboard-admin works!</p>
+<div class="admin-wrapper">
+  <div class="admin-header">
+    <div>
+      <h1>Admin Dashboard</h1>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div
+      class="stat-card clickable"
+      [class.active]="filterStatus === 'all'"
+      (click)="setFilter('all')"
+    >
+      <span class="stat-number">{{ totalSurveys }}</span>
+      <span class="stat-card">Total Surveys in Database</span>
+    </div>
+    <div
+      class="stat-card clickable"
+      [class.active]="filterStatus === 'published'"
+      (click)="setFilter('published')"
+    >
+      <span class="stat-number">{{ publishedCount }}</span>
+      <span class="stat-card">Total Published Surveys in Database</span>
+    </div>
+    <div
+      class="stat-card clickable"
+      [class.active]="filterStatus === 'draft'"
+      (click)="setFilter('draft')"
+    >
+      <span class="stat-number">{{ draftCount }}</span>
+      <span class="stat-card">Total Drafts in Database</span>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="onSearch()"
+      placeholder="Search by ID, title, name or email..."
+      class="search-input"
+    />
+    <button *ngIf="searchTerm" class="btn-clear" (click)="clearSearch()">
+      Clear
+    </button>
+  </div>
+  <!-- Messages -->
+  <div class="api-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+  <div class="api-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="state-box">Loading all surveys...</div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading && filteredSurveys.length === 0" class="state-box">
+    <p>No surveys found matching your search.</p>
+    <button class="btn-outline" (click)="clearSearch()">Clear Search</button>
+  </div>
+
+  <div *ngIf="!isLoading && filteredSurveys.length > 0" class="survey-table">
+    <!-- Table Header -->
+    <div class="table-header">
+      <span class="col-id">ID</span>
+      <span class="col-title">Survey Title</span>
+      <span class="col-host">Host</span>
+      <span class="col-points">Points</span>
+      <span class="col-status">Status</span>
+      <span class="col-actions">Actions</span>
+    </div>
+
+    <!-- Table Rows -->
+    <div
+      *ngFor="let survey of filteredSurveys"
+      class="table-row"
+      [class.published-row]="survey.is_published"
+      [class.draft-row]="!survey.is_published"
+    >
+      <!-- ID -->
+      <span class="col-id cell-muted">#{{ survey.id }}</span>
+
+      <!-- Title -->
+      <span class="col-title">
+        <span class="survey-title">{{ survey.title }}</span>
+      </span>
+
+      <!-- Host -->
+      <span class="col-host">
+        <span class="host-name">{{ survey.creator.name }}</span>
+        <span class="host-email">{{ survey.creator.email }}</span>
+      </span>
+
+      <!-- Points -->
+      <span class="col-points">
+        <span class="points-badge">🏆 {{ survey.points_reward }}</span>
+      </span>
+
+      <!-- Status -->
+      <span class="col-status">
+        <span
+          class="status-badge"
+          [class.published]="survey.is_published"
+          [class.draft]="!survey.is_published"
+        >
+          {{ survey.is_published ? "Published" : "Draft" }}
+        </span>
+      </span>
+
+      <!-- Actions -->
+      <span class="col-actions">
+        <!-- Unlock button — only for published surveys -->
+        <button
+          *ngIf="survey.is_published"
+          class="btn-unlock"
+          (click)="unlockSurvey(survey)"
+          [disabled]="togglingId === survey.id"
+        >
+          {{ togglingId === survey.id ? "..." : "🔓 Unlock" }}
+        </button>
+
+        <!-- Publish button — only for draft surveys -->
+        <button
+          *ngIf="!survey.is_published"
+          class="btn-publish"
+          (click)="publishSurvey(survey)"
+          [disabled]="togglingId === survey.id"
+        >
+          {{ togglingId === survey.id ? "..." : "🚀 Publish" }}
+        </button>
+      </span>
+    </div>
+  </div>
+</div>

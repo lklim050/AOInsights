@@ -17,7 +17,7 @@
   width: 72px;
   height: 72px;
   border-radius: 50%;
-  background: #4f46e5;
+  background: #4ade80;
   color: white;
   display: flex;
   align-items: center;
@@ -217,7 +217,7 @@
 
 .btn-primary {
   padding: 12px 24px;
-  background: #4f46e5;
+  background: #10b981;
   color: white;
   border: none;
   border-radius: 8px;

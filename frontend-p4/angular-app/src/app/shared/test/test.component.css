@@ -1,0 +1,76 @@
+.wrapper {
+  background-color: black;
+}
+
+.btn {
+  padding: 20px 40px;
+  background: #4f46e5;
+  color: white;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background 0.2s;
+  background: linear-gradient(to right, #22d3ee, #14b8a6);
+}
+
+h1 {
+  font-size: 500;
+}
+/* text-sm font-medium text-white px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-teal-500 hover:opacity-90 transition-opacity */
+
+.test-1 {
+  background-color: #ecfeff;
+  width: 400px;
+  height: 100px;
+  margin: 20px;
+}
+
+.test-2 {
+  background-color: #f0fdfa;
+  width: 400px;
+  height: 100px;
+  margin: 20px;
+}
+
+.test-3 {
+  background-color: #22d3ee;
+  width: 400px;
+  height: 100px;
+  margin: 20px;
+}
+
+.test-4 {
+  background-color: #0891b2;
+  width: 400px;
+  height: 100px;
+  margin: 20px;
+}
+
+.test-5 {
+  background-color: #2dd4bf;
+  width: 400px;
+  height: 100px;
+  margin: 20px;
+}
+
+.test-6 {
+  background-color: #14b8a6;
+  width: 400px;
+  height: 100px;
+  margin: 20px;
+}
+
+.test-7 {
+  background-color: #0d9488;
+  width: 400px;
+  height: 100px;
+  margin: 20px;
+}
+
+.test-8 {
+  background-color: #4ade80;
+  width: 400px;
+  height: 100px;
+  margin: 20px;
+}
