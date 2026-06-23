@@ -19,7 +19,7 @@ export const seedDatabase = async (req, res) => {
       data: [
         {
           uuid: "h1111111-1111-1111-1111-111111111111",
-          email: "host1@smrt.com",
+          email: "host1@aoi.com",
           name: "Host Alex",
           password: hashedPassword,
           role: "HOST",
@@ -27,7 +27,7 @@ export const seedDatabase = async (req, res) => {
         },
         {
           uuid: "h2222222-2222-2222-2222-222222222222",
-          email: "host2@smrt.com",
+          email: "host2@aoi.com",
           name: "Host Beatrice",
           password: hashedPassword,
           role: "HOST",

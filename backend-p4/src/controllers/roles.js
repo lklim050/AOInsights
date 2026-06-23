@@ -1,5 +1,4 @@
-// src/controllers/roleController.js
-import { Role } from "../generated/prisma/index.js"; // 🍏 Import the Enum object directly!
+import { Role } from "../generated/prisma/index.js"; // Import the Enum object directly!
 
 export const getAllRoles = async (req, res) => {
   try {

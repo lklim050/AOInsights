@@ -97,7 +97,7 @@ export const readQuestionsBySurveyId = async (req, res) => {
         .status(ownership.error)
         .json({ status: "error", msg: ownership.msg });
 
-    // Fetch questions
+    // Fetch questions after previous check passes
     const questions = await prisma.question.findMany({
       where: { survey_id: Number(surveyId) },
       orderBy: { id: "asc" }, // Keeps order stable
@@ -118,7 +118,7 @@ export const updateQuestion = async (req, res) => {
     const { question_text, type, options } = req.body;
     const hostId = req.decoded?.id || req.decoded?.uuid;
 
-    // 1. Verify target question exists
+    // Verify if target question exists
     const question = await prisma.question.findUnique({
       where: { id: Number(questionId) },
     });
@@ -127,14 +127,14 @@ export const updateQuestion = async (req, res) => {
         .status(404)
         .json({ status: "error", msg: "Question not found" });
 
-    // 2. Verify survey ownership
+    // Verify survey ownership
     const ownership = await verifySurveyOwnership(question.survey_id, hostId);
     if (ownership.error)
       return res
         .status(ownership.error)
         .json({ status: "error", msg: ownership.msg });
 
-    // 3. Build dynamic updates and handle TEXT constraint rules
+    // Create updateData according to req.body
     const updateData = {};
     if (question_text !== undefined) updateData.question_text = question_text;
 
@@ -148,7 +148,7 @@ export const updateQuestion = async (req, res) => {
       updateData.options = options;
     }
 
-    // 4. Update row
+    // Update start here after previous check passes, updateData created:
     const updatedQuestion = await prisma.question.update({
       where: { id: Number(questionId) },
       data: updateData,
@@ -172,7 +172,7 @@ export const deleteQuestion = async (req, res) => {
     const { questionId } = req.params;
     const hostId = req.decoded?.id || req.decoded?.uuid;
 
-    // 1. Verify target question exists
+    // Verify target question exists
     const question = await prisma.question.findUnique({
       where: { id: Number(questionId) },
     });
@@ -181,14 +181,14 @@ export const deleteQuestion = async (req, res) => {
         .status(404)
         .json({ status: "error", msg: "Question not found" });
 
-    // 2. Verify survey ownership
+    // Verify survey ownership
     const ownership = await verifySurveyOwnership(question.survey_id, hostId);
     if (ownership.error)
       return res
         .status(ownership.error)
         .json({ status: "error", msg: ownership.msg });
 
-    // 3. Perform removal
+    // Delete start here after previous check passes
     await prisma.question.delete({
       where: { id: Number(questionId) },
     });

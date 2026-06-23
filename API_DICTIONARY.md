@@ -1,12 +1,12 @@
 # API Dictionary
 
-This document lists the backend API endpoints, methods, required auth, request bodies, and example responses for the Prisma-backed backend.
+This document lists the active backend API endpoints, methods, auth requirements, request bodies, and example responses for the Prisma-backed backend.
 
 ---
 
 **Base URL**: `http://<HOST>:<PORT>/`
 
-The running server mounts these routers in `backend-p4/server.js`:
+Mounted routers in `backend-p4/server.js`:
 
 - `/users`
 - `/seed`
@@ -36,12 +36,19 @@ The running server mounts these routers in `backend-p4/server.js`:
     "id": 1,
     "survey_id": 1,
     "question_text": "string",
-    "type": "TEXT | RADIO | CHECKBOX | SELECT",
+    "type": "RADIO | CHECKBOX | SELECT | TEXT",
     "options": ["string"]
   },
   "SurveyAnswerItem": {
     "question_id": 1,
     "answer": "string | string[]"
+  },
+  "SurveyInsight": {
+    "id": 1,
+    "survey_id": 1,
+    "summary": "string",
+    "submission_count": 0,
+    "createdAt": "ISO-8601 string"
   },
   "Error": {
     "status": "error",
@@ -63,8 +70,8 @@ Content-Type: application/json
 
 - `GET /users`
   - Auth: `authAdmin`
-  - Description: Get all users for admin use.
-  - Response: `200` array of users with `points_bal` included.
+  - Description: Returns all users for admin use.
+  - Response: `200` array of user records with `uuid`, `email`, `name`, `role`, and `points_bal`.
 
 - `PUT /users/register`
   - Auth: none
@@ -101,6 +108,7 @@ Content-Type: application/json
   "refresh": "jwt-string",
   "uuid": "uuid-string",
   "email": "string",
+  "name": "string",
   "role": "HOST | USER | ADMIN",
   "points_bal": 0
 }
@@ -130,16 +138,38 @@ Content-Type: application/json
 
 - `PUT /seed`
   - Auth: `authAdmin`
-  - Description: Truncate and reseed users, surveys, questions, and responses.
+  - Description: Truncates and reseeds users, surveys, questions, and responses.
   - Response: `200` -> `{ "status": "ok", "msg": "Database seeded dynamically with correct local hashes!" }`
   - Errors: `500` -> `{ "status": "error", "msg": "Fail to execute dynamic seed", "details": "string" }`
 
 ## Surveys
 
-- `GET /surveys/test`
-  - Auth: none
-  - Description: Returns all surveys as a raw array.
-  - Response: `200` -> `Survey[]`
+- `GET /surveys/admin`
+  - Auth: `authAdmin`
+  - Description: Returns all surveys with creator details for admin use.
+  - Response: `200`
+
+```json
+{
+  "status": "ok",
+  "msg": "all surveys fetched successfully",
+  "surveys": [
+    {
+      "id": 1,
+      "title": "string",
+      "points_reward": 0,
+      "is_published": false,
+      "created_by": "uuid-string",
+      "creator": {
+        "uuid": "uuid-string",
+        "name": "string",
+        "email": "string",
+        "role": "HOST | USER | ADMIN"
+      }
+    }
+  ]
+}
+```
 
 - `GET /surveys`
   - Auth: `auth`
@@ -166,7 +196,7 @@ Content-Type: application/json
 
 - `GET /surveys/public`
   - Auth: `auth`
-  - Description: Returns all published surveys with host name and `isAttempted` status.
+  - Description: Returns all published surveys with host name and per-user attempt status.
   - Response: `200`
 
 ```json
@@ -243,7 +273,7 @@ Content-Type: application/json
         "id": 1,
         "survey_id": 1,
         "question_text": "string",
-        "type": "TEXT | RADIO | CHECKBOX | SELECT",
+        "type": "RADIO | CHECKBOX | SELECT | TEXT",
         "options": ["string"]
       }
     ]
@@ -264,7 +294,7 @@ Content-Type: application/json
 }
 ```
 
-- Errors: `404` user/survey not found, `403` unpublished survey blocked for non-hosts, `500` fail to find.
+- Errors: `404` user/survey not found, `500` fail to find.
 
 - `GET /surveys/:surveyId/results`
   - Auth: `authHost`
@@ -279,7 +309,7 @@ Content-Type: application/json
   "results": {
     "<question_id>": {
       "question_text": "string",
-      "type": "TEXT | RADIO | CHECKBOX | SELECT",
+      "type": "RADIO | CHECKBOX | SELECT | TEXT",
       "counts": { "option": 0 },
       "total_selections_counted": 0,
       "text_responses": ["string"]
@@ -290,18 +320,56 @@ Content-Type: application/json
 
 - Errors: `404` survey not found, `403` unauthorised access to results, `500` fail to compile results.
 
+- `POST /surveys/:surveyId/insights`
+  - Auth: `authHost`
+  - Description: Generates or reuses AI-backed survey insights for a host-owned survey.
+  - Response: `200`
+
+```json
+{
+  "status": "ok",
+  "msg": "Fetch data successfully using AI model gemini-3.1-flash-lite",
+  "aiModel": "gemini-3.1-flash-lite",
+  "insights": {
+    "id": 1,
+    "survey_id": 1,
+    "summary": "markdown text",
+    "submission_count": 12,
+    "createdAt": "ISO-8601 string"
+  },
+  "last_created_at": "ISO-8601 string"
+}
+```
+
+- Low-response fallback: when total submissions are below 5, the endpoint returns `200` with `msg`, `aiModel: "Looking for AI..."`, `insights` set to the previous insight or `[]`, and `last_created_at: ""`.
+- Errors: `404` survey not found, `403` unauthorised access, `500` fail to generate insights.
+
+- `PATCH /surveys/:surveyId/toggle`
+  - Auth: `authAdmin`
+  - Description: Admin-only publish toggle. Unpublishing also deletes survey responses and AI insights.
+  - Body:
+
+```json
+{
+  "is_published": true
+}
+```
+
+- Response: `200` -> `{ "status": "ok", "msg": "success", "input": true, "role": "ADMIN" }`
+- Errors: `404` user/survey not found, `500` invalid toggle input or toggle failure.
+
 ## Questions
 
 - `PUT /questions`
   - Auth: `authHost`
-  - Description: Create a question for a host-owned unpublished survey.
+  - Description: Creates a question for a host-owned unpublished survey.
   - Body:
 
 ```json
 {
   "survey_id": 1,
   "question_text": "string",
-  "type": "TEXT | RADIO | CHECKBOX | SELECT",
+  "type": "RADIO | CHECKBOX | SELECT | TEXT",
   "options": ["string"]
 }
 ```
@@ -311,7 +379,7 @@ Content-Type: application/json
 
 - `GET /questions/survey/:surveyId`
   - Auth: `authHost`
-  - Description: Get all questions for a host-owned survey.
+  - Description: Returns all questions for a host-owned survey.
   - Response: `200` -> `{ "status": "ok", "count": 0, "questions": Question[] }`
   - Errors: `404` survey not found, `403` not owner, `400` live survey guard, `500` fail to fetch questions.
 
@@ -322,7 +390,7 @@ Content-Type: application/json
 ```json
 {
   "question_text": "string",
-  "type": "TEXT | RADIO | CHECKBOX | SELECT",
+  "type": "RADIO | CHECKBOX | SELECT | TEXT",
   "options": ["string"]
 }
 ```
@@ -336,6 +404,31 @@ Content-Type: application/json
   - Errors: `404` question not found, `403` not owner, `400` live survey guard, `500` fail to delete question.
 
 ## Responses
+
+- `GET /responses`
+  - Auth: `auth`
+  - Description: Returns all survey responses submitted by the authenticated user.
+  - Response: `201`
+
+```json
+{
+  "status": "ok",
+  "msg": "Responses fetched successfully",
+  "responses_count": 1,
+  "responses": [
+    {
+      "id": 1,
+      "user_id": "uuid-string",
+      "survey_id": 1,
+      "answers_payload": [],
+      "status": "completed",
+      "ai_fraud_notes": null
+    }
+  ]
+}
+```
+
+- Errors: `401` user not found, `500` failed to fetch responses.
 
 - `POST /responses/survey/:surveyId`
   - Auth: `auth`
@@ -354,7 +447,7 @@ Content-Type: application/json
         "id": 1,
         "survey_id": 1,
         "question_text": "string",
-        "type": "TEXT | RADIO | CHECKBOX | SELECT",
+        "type": "RADIO | CHECKBOX | SELECT | TEXT",
         "options": ["string"]
       }
     ],
@@ -407,12 +500,6 @@ Content-Type: application/json
 
 - Errors: `401` user not logged in, `404` survey not found, `400` unpublished survey or duplicate submission, `500` fail to submit survey response.
 
-## Legacy Reference Routers
+## Not Mounted
 
-The repository also contains legacy `ref/*` router files for reference, but `backend-p4/server.js` does not mount them.
-
-- `ref/auth`
-- `ref/appts`
-- `ref/roles`
-
-These files are useful for compatibility notes only and should not be treated as active routes in the current server.
+- `src/controllers/roles.js` exists, but `backend-p4/server.js` does not mount a `/roles` router. There is no active public API route for roles in the current server.

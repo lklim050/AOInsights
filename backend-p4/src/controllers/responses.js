@@ -130,7 +130,7 @@ export const submitSurveyResponse = async (req, res) => {
       });
     }
 
-    // Create and update only previous checks pass
+    // Create and update starts here after previous checks pass
     const result = await prisma.$transaction(async (tx) => {
       // Store the response payload structure
       const newResponse = await tx.surveyResponse.create({
@@ -273,39 +273,39 @@ export const getSurveyInsights = async (req, res) => {
 
     // AI Generation starts here if no existing insights
     const prompt = `
-You are a data analyst. Analyze the survey results in the JSON below.
+      You are a data analyst. Analyze the survey results in the JSON below.
 
-Return your analysis in this markdown format:
+      Return your analysis in this markdown format:
 
-### 1. Trends Analysis
-* **[Trend Label]:** [Your analysis]. **(SENTIMENT)**
-(Add 2-4 bullets based on what the data actually shows)
+      ### 1. Trends Analysis
+      * **[Trend Label]:** [Your analysis]. **(SENTIMENT)**
+      (Add 2-4 bullets based on what the data actually shows)
 
-### 2. Summary of Text Feedback
-* **[Feedback Label]:** [Your summary]. **(SENTIMENT)**
-(Add 2-4 bullets based on what the data actually shows)
+      ### 2. Summary of Text Feedback
+      * **[Feedback Label]:** [Your summary]. **(SENTIMENT)**
+      (Add 2-4 bullets based on what the data actually shows)
 
-### 3. Actionable Recommendations
-* **[Recommendation Label]:** [Your recommendation]. **(PRIORITY)**
-(Add exactly 3 bullets)
+      ### 3. Actionable Recommendations
+      * **[Recommendation Label]:** [Your recommendation]. **(PRIORITY)**
+      (Add exactly 3 bullets)
 
-KEYWORD RULES:
-- Replace (SENTIMENT) with POSITIVE, NEGATIVE, or NEUTRAL based on the ACTUAL data
-- Replace (PRIORITY) with HIGH, MEDIUM, or LOW for recommendations
-- Be honest: if the data is neutral or inconclusive, mark it NEUTRAL
-- Do NOT force a mix of sentiments — if all feedback is neutral, mark everything NEUTRAL
-- If there is limited or test data, NEUTRAL is the appropriate sentiment
+      KEYWORD RULES:
+      - Replace (SENTIMENT) with POSITIVE, NEGATIVE, or NEUTRAL based on the ACTUAL data
+      - Replace (PRIORITY) with HIGH, MEDIUM, or LOW for recommendations
+      - Be honest: if the data is neutral or inconclusive, mark it NEUTRAL
+      - Do NOT force a mix of sentiments — if all feedback is neutral, mark everything NEUTRAL
+      - If there is limited or test data, NEUTRAL is the appropriate sentiment
 
-FORMAT RULES:
-- Every bullet MUST end with **(KEYWORD)**
-- Use ONLY: POSITIVE, NEGATIVE, NEUTRAL for sentiment
-- Use ONLY: HIGH, MEDIUM, LOW for priority
-- Do NOT use markdown tables
-- Do NOT put the keyword inside the label
-- Use the exact section headers shown (### with number and title)
+      FORMAT RULES:
+      - Every bullet MUST end with **(KEYWORD)**
+      - Use ONLY: POSITIVE, NEGATIVE, NEUTRAL for sentiment
+      - Use ONLY: HIGH, MEDIUM, LOW for priority
+      - Do NOT use markdown tables
+      - Do NOT put the keyword inside the label
+      - Use the exact section headers shown (### with number and title)
 
-JSON: ${JSON.stringify(resultsSummary)}
-`;
+      JSON: ${JSON.stringify(resultsSummary)}
+    `;
 
     const result = await ai.models.generateContent({
       model: aiModel, // Alternative to try

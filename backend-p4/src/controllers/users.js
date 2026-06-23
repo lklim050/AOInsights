@@ -8,7 +8,7 @@ export const getAllUsers = async (req, res) => {
     const users = await prisma.user.findMany({
       select: {
         uuid: true, // Returning our new custom String PK format
-        email: true, // Swapped from Mongoose 'username' to match your schema's 'email'
+        email: true,
         name: true,
         role: true,
         points_bal: true,
@@ -36,7 +36,7 @@ export const registerUser = async (req, res) => {
 
     const hash = await bcrypt.hash(req.body.password, 12);
 
-    // Create entry—Prisma automatically generates the uuid() for us under the hood
+    // Create prisma entry which automatically generates the uuid()
     await prisma.user.create({
       data: {
         email: req.body.email,
@@ -55,7 +55,6 @@ export const registerUser = async (req, res) => {
   }
 };
 
-// 3. LOGIN USER
 export const loginUser = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -83,7 +82,6 @@ export const loginUser = async (req, res) => {
       jwtid: uuidv4(),
     });
 
-    // Returning user.uuid to replace old MongoDB ._id reference
     return res.json({
       access,
       refresh,
@@ -99,7 +97,7 @@ export const loginUser = async (req, res) => {
   }
 };
 
-// 4. REFRESH ACCESS TOKEN
+// FUTURE IMPLEMENTATION?
 export const refreshAccess = async (req, res) => {
   try {
     const decoded = jwt.verify(req.body.refresh, process.env.REFRESH_SECRET);
@@ -121,7 +119,6 @@ export const refreshAccess = async (req, res) => {
   }
 };
 
-// 5. OPTIONAL LOGOUT CONTROLLER (Only needed if utilizing HTTP-Only Cookies)
 export const logoutUser = async (req, res) => {
   try {
     // Overwrite the cookie with an immediate expiration date

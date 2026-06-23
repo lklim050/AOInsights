@@ -22,8 +22,6 @@ export const readSurveysAdmin = async (req, res) => {
       orderBy: { id: "asc" },
     });
 
-    // const surveys = await prisma.survey.findMany();
-
     return res.status(200).json({
       status: "ok",
       msg: "all surveys fetched successfully",
@@ -54,7 +52,7 @@ export const createSurvey = async (req, res) => {
       where: {
         title: {
           equals: title,
-          mode: "insensitive", // 🍏 Makes the check case-insensitive (e.g., "Mrt" matches "MRT")
+          mode: "insensitive", // Makes the check case-insensitive (e.g., "Mrt" matches "MRT")
         },
         created_by: id, // Ensures the scope is user-specific (different hosts can use the same title)
       },
@@ -67,7 +65,7 @@ export const createSurvey = async (req, res) => {
       });
     }
 
-    // Create if previous checks pass
+    // Create starts here if previous checks pass
     const survey = await prisma.survey.create({
       data: {
         title,
@@ -92,19 +90,17 @@ export const createSurvey = async (req, res) => {
 
 export const readAllSurveys = async (req, res) => {
   try {
-    // const { id } = req.body;
     const id = req.decoded?.id || req.decoded?.uuid;
-    // 1. Verify the user exists first
+    // Verify the user exists first
     const user = await prisma.user.findUnique({
       where: { uuid: id },
     });
     if (!user) return res.status(404).json({ msg: "user not found" });
 
-    // 2. Query the Survey table directly using the foreign key string!
-    // This avoids having to guess the reverse relation name entirely.
+    // Query the Survey table directly using the foreign key string
     const userSurveys = await prisma.survey.findMany({
       where: {
-        created_by: id, // 🍏 Matches the foreign key property exactly
+        created_by: id, // Matches the foreign key property exactly
       },
     });
 
@@ -114,7 +110,6 @@ export const readAllSurveys = async (req, res) => {
       surveys: userSurveys,
     });
   } catch (error) {
-    // This logs the exact error details to your terminal console so you can see it instantly
     console.error("❌ readAllSurveys Query Error:", error);
 
     return res.status(500).json({
@@ -128,7 +123,6 @@ export const readAllSurveys = async (req, res) => {
 // this would populate questions and options
 export const getSurveyById = async (req, res) => {
   try {
-    // const { id } = req.body;
     const surveyId = Number(req.params.surveyId);
     const userId = req.decoded?.id || req.decoded?.uuid;
 
@@ -148,14 +142,6 @@ export const getSurveyById = async (req, res) => {
       return res
         .status(404)
         .json({ status: "error", msg: "id does not exist" });
-
-    // // Prevent regular USER from accessing an unpublished survey
-    // if (!survey.is_published && user.role !== "HOST") {
-    //   return res.status(403).json({
-    //     status: "error",
-    //     msg: "Survey not yet published",
-    //   });
-    // }
 
     const existingResponse = await prisma.surveyResponse.findUnique({
       where: {
@@ -279,7 +265,7 @@ export const updateSurvey = async (req, res) => {
           },
           created_by: id, // Scoped to this host's account only
           NOT: {
-            id: surveyId, // Ignore this current survey row!
+            id: surveyId, // Ignore this current survey row
           },
         },
       });
@@ -319,7 +305,6 @@ export const updateSurvey = async (req, res) => {
 
 export const deleteSurvey = async (req, res) => {
   try {
-    // const { id } = req.body;
     const id = req.decoded?.id || req.decoded?.uuid;
     const surveyId = Number(req.params.surveyId);
 
@@ -353,61 +338,7 @@ export const deleteSurvey = async (req, res) => {
   }
 };
 
-// // READ ALL PUBLISHED SURVEYS (Accessible by everyone to view/answer)
-// export const readPublishedSurveys = async (req, res) => {
-//   try {
-//     const userId = req.decoded?.id || req.decoded?.uuid;
-
-//     // Verify the user exists first
-//     const user = await prisma.user.findUnique({
-//       where: { uuid: userId },
-//     });
-//     if (!user) return res.status(404).json({ msg: "user not found" });
-//     // Query the database for surveys that are marked as published
-//     const publishedSurveys = await prisma.survey.findMany({
-//       where: {
-//         is_published: true,
-//       },
-//       select: {
-//         id: true,
-//         title: true,
-//         points_reward: true,
-//         // created_at: true,
-//         // We can optionally include the host's name so users know who created it
-//         creator: {
-//           select: {
-//             name: true,
-//           },
-//         },
-//       },
-//       orderBy: {
-//         created_by: "desc", // Show the newest surveys first
-//       },
-//     });
-
-//     const existingResponse = await prisma.surveyResponse.findUnique({
-//       where: {
-//         user_id_survey_id: {
-//           user_id: userId,
-//           survey_id: Number(surveyId),
-//         },
-//       },
-//     });
-
-//     return res.json({
-//       status: "ok",
-//       count: publishedSurveys.length,
-//       surveys: publishedSurveys,
-//     });
-//   } catch (error) {
-//     console.error(error.message);
-//     return res
-//       .status(500)
-//       .json({ status: "error", msg: "fail to fetch published surveys" });
-//   }
-// };
-
-// READ ALL PUBLISHED SURVEYS
+// READ ALL PUBLISHED SURVEYS For User
 export const readPublishedSurveys = async (req, res) => {
   try {
     const userId = req.decoded?.id || req.decoded?.uuid;

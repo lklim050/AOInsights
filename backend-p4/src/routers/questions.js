@@ -6,11 +6,34 @@ import {
   updateQuestion,
 } from "../controllers/questions.js";
 import { authHost } from "../middlewares/users.js";
+import {
+  validateQuestionCreation,
+  validateQuestionIdParam,
+} from "../validators/surveys.js";
+import checkError from "../validators/checkErrors.js";
 
 const router = express.Router();
 
-router.put("/", authHost, createQuestion);
-router.get("/survey/:surveyId", authHost, readQuestionsBySurveyId);
-router.patch("/:questionId", authHost, updateQuestion);
-router.delete("/:questionId", authHost, deleteQuestion);
+router.put("/", authHost, validateQuestionCreation, checkError, createQuestion);
+router.get(
+  "/survey/:surveyId",
+  authHost,
+  validateQuestionIdParam,
+  checkError,
+  readQuestionsBySurveyId,
+);
+router.patch(
+  "/:questionId",
+  authHost,
+  validateQuestionIdParam,
+  checkError,
+  updateQuestion,
+);
+router.delete(
+  "/:questionId",
+  authHost,
+  validateQuestionIdParam,
+  checkError,
+  deleteQuestion,
+);
 export default router;
