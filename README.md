@@ -1,4 +1,4 @@
-# AOInsights 🦉
+# 🕊️ AOInsights
 
 > your **A**utomated **O**pinions into **I**nsights
 
@@ -11,16 +11,13 @@ the General Assembly Software Engineering Bootcamp.
 
 ---
 
-## 🇸🇬 Overview
+## 🦁 Overview
 
 AOInsights connects three types of users on one platform:
 
 - **Users** — Complete community surveys, earn points, track tier progression
 - **Hosts** — Create surveys, view real-time analytics, generate AI insights
 - **Admins** — Oversee the platform, manage survey publish states
-
-The name **AOI** (蒼い) means _blue-green_ in Japanese — reflected in the
-platform's cyan-teal-green colour identity.
 
 ---
 
@@ -92,7 +89,7 @@ platform's cyan-teal-green colour identity.
 
 ### 🌐 Public
 
-- Landing page with Singapore skyline hero
+- Interactive Landing page with Singapore theme
 - How it works, features, and tier rewards sections
 - Dark mode support
 
@@ -240,7 +237,7 @@ npx prisma db seed
 
 ```bash
 npm run dev
-# Server runs on http://localhost:3000
+# Server runs on http://localhost:your-backend-port
 ```
 
 ---
@@ -259,13 +256,13 @@ cd frontend-p4/angular-app
 npm install
 ```
 
-**3. Set up environment variables**
+**3. Set up environment variables for the frontend**
 
 ```bash
 # Update src/environments/environment.ts
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:3000/api'
+  apiUrl: 'http://localhost:your-backend-port/api'
 };
 ```
 
@@ -273,17 +270,6 @@ export const environment = {
 
 ```bash
 npm start
-```
-
----
-
-### Frontend `environment.ts`
-
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: "http://localhost:3000/api",
-};
 ```
 
 ---
@@ -300,7 +286,7 @@ Full API documentation is available in:
 | GET    | `/users`                      | authAdmin | Get all users                                 |
 | PUT    | `/users/register`             | none      | Register new user                             |
 | POST   | `/users/login`                | none      | Login and get JWT tokens                      |
-| POST   | `/users/refresh`              | none      | Refresh access token                          |
+| POST   | `/users/refresh`              | none      | Refresh access token (future implementation)  |
 | POST   | `/users/logout`               | none      | Logout user                                   |
 | PUT    | `/seed`                       | authAdmin | Reseed users, surveys, questions, responses   |
 | GET    | `/surveys/admin`              | authAdmin | Get all surveys with creator details          |
@@ -434,9 +420,9 @@ Full API documentation is available in:
 
 ![Profile Page](./screenshots/profile.png)
 
-### Admin Panel
+### Admin Dashboard
 
-![Admin Panel](./screenshots/admin.png)
+![Admin Dashboard](./screenshots/admin.png)
 
 ---
 
@@ -453,14 +439,14 @@ The survey data has clear relational structure — users own surveys, surveys co
 
 ### JWT Auth Strategy
 
-Two-token strategy: short-lived access tokens + refresh tokens. An Angular HTTP interceptor automatically attaches Bearer tokens to every request and handles 401 responses by redirecting to login.
+Two-token strategy: short-lived access tokens. An Angular HTTP interceptor automatically attaches Bearer tokens to every request and handles 401 responses by redirecting to login.
 
 ### AI Integration
 
 Google Gemini AI (`gemini-3.1-flash-lite`) analyses aggregated survey
 response data. A structured prompt enforces consistent markdown output
 that the frontend parses into colour-coded insight cards — green for
-positive findings, red for negative, amber for recommendations.
+positive findings / low priority, red for negative / high priority, white/yellow for neutral / medium priority.
 
 ---
 
