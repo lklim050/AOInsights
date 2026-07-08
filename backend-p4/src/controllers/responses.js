@@ -17,6 +17,20 @@ export const hostVerification = async (surveyId, hostId) => {
   return { success: true, survey };
 };
 
+export const createSurveyResponseByDemo = async (req, res) => {
+  try {
+    const userId = req.decoded?.id || req.decoded?.uuid;
+    if (!userId) {
+      return res.status(401).json({ status: "error", msg: "User not found" });
+    }
+  } catch (error) {
+    console.error("❌ getSurveyResponse error:", error);
+    return res
+      .status(500)
+      .json({ status: "error", msg: "failed to generate demo responses" });
+  }
+};
+
 export const getSurveyResponseByUser = async (req, res) => {
   try {
     const userId = req.decoded?.id || req.decoded?.uuid;

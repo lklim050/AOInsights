@@ -17,7 +17,6 @@ import { TestComponent } from './shared/test/test.component';
 
 export const routes: Routes = [
   { path: '', component: LandingComponent },
-  // { path: 'test', component: TestComponent },
   { path: 'home', component: HomeComponent, canActivate: [authGuard] },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },

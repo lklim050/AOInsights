@@ -73,7 +73,7 @@ export const loginUser = async (req, res) => {
     const claims = { uuid: user.uuid, email: user.email, role: user.role };
 
     const access = jwt.sign(claims, process.env.ACCESS_SECRET, {
-      expiresIn: "20m",
+      expiresIn: "60m",
       jwtid: uuidv4(),
     });
 

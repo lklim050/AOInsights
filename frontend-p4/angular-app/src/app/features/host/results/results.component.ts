@@ -112,6 +112,8 @@ export class ResultsComponent implements OnInit {
     });
   }
 
+  generateResponse() {}
+
   closeInsightModal() {
     this.showInsightModal = false;
   }
