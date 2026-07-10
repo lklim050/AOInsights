@@ -549,7 +549,8 @@ Since Netlify and Render are both connected to the same monorepo, every push to 
   base = "frontend-p4/angular-app"
   command = "ng build"
   publish = "dist/angular-app/browser"
-  ignore = "git diff --quiet HEAD^ HEAD -- frontend-p4/"
+
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ."
 ```
 
 > **Note:** `ignore` must be a direct property of `[build]` — not a nested `[build.ignore]` block. Netlify will fail to parse the config if structured incorrectly.
