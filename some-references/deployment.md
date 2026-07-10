@@ -905,9 +905,7 @@ Since Netlify and Render are both connected to the same monorepo, every push to 
   base = "frontend-p4/angular-app"
   command = "ng build"
   publish = "dist/angular-app/browser"
-
-[build.ignore]
-  command = "git diff --quiet HEAD^ HEAD -- frontend-p4/"
+  ignore = "git diff --quiet HEAD^ HEAD -- frontend-p4/"
 ```
 
 > **How it works:** The `ignore` command tells Netlify to check if any files inside `frontend-p4/` changed since the last commit. If nothing changed there, Netlify skips the build entirely — no build minutes burned.

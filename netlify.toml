@@ -2,6 +2,4 @@
   base = "frontend-p4/angular-app"
   command = "ng build"
   publish = "dist/angular-app/browser"
-
-[build.ignore]
-  command = "git diff --quiet HEAD^ HEAD -- frontend-p4/"   
+  ignore = "git diff --quiet HEAD^ HEAD -- frontend-p4/"
