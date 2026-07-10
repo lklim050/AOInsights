@@ -44,6 +44,7 @@ export class RegisterComponent {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -101,5 +102,9 @@ export class RegisterComponent {
         this.isLoading = false;
       },
     });
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
   }
 }
