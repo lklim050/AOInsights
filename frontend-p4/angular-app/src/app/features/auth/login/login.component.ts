@@ -79,4 +79,8 @@ export class LoginComponent {
   togglePassword() {
     this.showPassword = !this.showPassword;
   }
+
+  fillForm(email: string, password: string) {
+    this.loginForm.patchValue({ email: email, password: password });
+  }
 }
